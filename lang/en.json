@@ -1,6 +1,6 @@
 {
   "RCR.Settings.EnableFlanking.Name": "Enable Flanking",
-  "RCR.Settings.EnableFlanking.Hint": "Melee attackers adjacent with an ally on the opposite side get +2 to hit.",
+  "RCR.Settings.EnableFlanking.Hint": "Melee attackers adjacent with an ally on the opposite side get flanking.",
 
   "RCR.Settings.flankingBehaviour.Name": "Flanking Behaviour",
   "RCR.Settings.flankingBehaviour.Hint": "Choose how flanking behaves either advtange or modifier",
