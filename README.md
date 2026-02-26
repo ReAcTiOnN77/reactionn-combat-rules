@@ -13,6 +13,15 @@ All features are fully toggleable through world settings so GMs can fine-tune co
 ### **Flanking**
 Automatically grants a **+2 bonus to hit** when a melee attacker and an ally are positioned on opposite cardinal sides of a target.
 
+#### **Flanking Behaviour Options**
+Choose how flanking should work at your table:
+- **Advantage**
+- **+1 to hit**
+- **+2 to hit** *(default)*
+- **+3 to hit**
+- **+4 to hit**
+- **+5 to hit**
+
 Optional rule:  
 - **Flanking Requires Active Ally** — The ally must not be prone, incapacitated, stunned, petrified, paralyzed, unconscious or dead.
 
