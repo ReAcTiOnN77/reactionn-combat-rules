@@ -55,7 +55,8 @@ Automatically applies advantage or disadvantage based on common status condition
 
 All features can be turned on or off individually via **Game Settings → Module Settings**:
 
-- Enable Flanking  
+- Enable Flanking
+- Flanking Behaviour (Advantage or +1 to +5)
 - Flanking Requires Active Ally  
 - Enable Surrounded  
 - Enable High Ground  
