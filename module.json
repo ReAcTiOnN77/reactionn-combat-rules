@@ -1,7 +1,7 @@
 {
   "id": "reactionn-combat-rules",
   "title": "ReAcTiOnN's Combat Rules",
-  "description": "",
+  "description": "Variant rules for 5e system, with full automation",
   "version": "#{VERSION}#",
   "library": "false",
   "manifestPlusVersion": "1.2.0",
