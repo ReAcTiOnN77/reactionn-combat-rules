@@ -1,4 +1,4 @@
-# ReactionN Combat Rules
+# ReAcTiOnN's Combat Rules
 
 A lightweight **D&D 5e Foundry VTT module** that enhances tactical combat with automated optional rules such as **flanking**, **surrounded bonuses**, **high-ground modifiers**, and **condition-based advantage/disadvantage**.  
 All features are fully toggleable through world settings so GMs can fine-tune combat to their table’s preferences.
