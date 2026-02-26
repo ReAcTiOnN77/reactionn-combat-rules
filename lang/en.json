@@ -1,0 +1,72 @@
+{
+  "RCR.Settings.EnableFlanking.Name": "Enable Flanking",
+  "RCR.Settings.EnableFlanking.Hint": "Melee attackers adjacent with an ally on the opposite side get +2 to hit.",
+
+  "RCR.Settings.flankingBehaviour.Name": "Flanking Behaviour",
+  "RCR.Settings.flankingBehaviour.Hint": "Choose how flanking behaves either advtange or modifier",
+  "RCR.Settings.flankingBehaviour.Adv": "Advantage",
+  "RCR.Settings.flankingBehaviour.Plus1": "+1",
+  "RCR.Settings.flankingBehaviour.Plus2": "+2",
+  "RCR.Settings.flankingBehaviour.Plus3": "+3",
+  "RCR.Settings.flankingBehaviour.Plus4": "+4",
+  "RCR.Settings.flankingBehaviour.Plus5": "+5",
+
+  "RCR.Settings.FlankingRequiresActive.Name": "Flanking Requires Active Ally",
+  "RCR.Settings.FlankingRequiresActive.Hint": "The flanking ally must not be dead, prone, incapacitated, unconscious, petrified, stunned, or paralyzed.",
+
+  "RCR.Settings.EnableSurrounded.Name": "Enable Surrounded",
+  "RCR.Settings.EnableSurrounded.Hint": "Melee attackers gain advantage when all 4 cardinal sides of the target are blocked by enemies or walls.",
+
+  "RCR.Settings.EnableHighGround.Name": "Enable High Ground",
+  "RCR.Settings.EnableHighGround.Hint": "Ranged weapon and spell attacks get +2 when the attacker is at least 10 ft higher in elevation than the target.",
+
+  "RCR.Settings.EnableConditionAdvantage.Name": "Condition-Based Advantage/Disadvantage",
+  "RCR.Settings.EnableConditionAdvantage.Hint": "Automatically apply advantage or disadvantage from conditions (e.g. blinded, restrained, prone, invisible, poisoned, paralyzed, stunned, unconscious).",
+
+  "RCR.Note.Flanking.Label": "Flanking",
+  "RCR.Note.Flanking.DescAdv": "An ally is on the opposite side — attack has advantage.",
+  "RCR.Note.Flanking.Desc1": "An ally is on the opposite side — +1 bonus to the attack roll.",
+  "RCR.Note.Flanking.Desc2": "An ally is on the opposite side — +2 bonus to the attack roll.",
+  "RCR.Note.Flanking.Desc3": "An ally is on the opposite side — +3 bonus to the attack roll.",
+  "RCR.Note.Flanking.Desc4": "An ally is on the opposite side — +4 bonus to the attack roll.",
+  "RCR.Note.Flanking.Desc5": "An ally is on the opposite side — +5 bonus to the attack roll.",
+
+  "RCR.Note.Surrounded.Label": "Surrounded",
+  "RCR.Note.Surrounded.Desc": "All cardinal sides are blocked — attack has advantage.",
+
+  "RCR.Note.HighGround.Label": "High Ground",
+  "RCR.Note.HighGround.Desc": "Attacker is 10+ ft above the target — +2 bonus to the attack roll.",
+
+  "RCR.Note.Advantage": "Advantage on the attack roll.",
+  "RCR.Note.Disadvantage": "Disadvantage on the attack roll.",
+
+  "RCR.Condition.Blinded": "Blinded",
+  "RCR.Condition.Frightened": "Frightened",
+  "RCR.Condition.Invisible": "Invisible",
+  "RCR.Condition.Poisoned": "Poisoned",
+  "RCR.Condition.Prone": "Prone",
+  "RCR.Condition.Restrained": "Restrained",
+  "RCR.Condition.Paralyzed": "Paralyzed",
+  "RCR.Condition.Petrified": "Petrified",
+  "RCR.Condition.Stunned": "Stunned",
+  "RCR.Condition.Unconscious": "Unconscious",
+
+  "RCR.Reason.AttackerBlinded": "Attacker is blinded.",
+  "RCR.Reason.AttackerFrightened": "Attacker is frightened.",
+  "RCR.Reason.AttackerInvisible": "Attacker is invisible.",
+  "RCR.Reason.AttackerPoisoned": "Attacker is poisoned.",
+  "RCR.Reason.AttackerProne": "Attacker is prone.",
+  "RCR.Reason.AttackerRestrained": "Attacker is restrained.",
+
+  "RCR.Reason.TargetBlinded": "Target cannot see the attacker.",
+  "RCR.Reason.TargetInvisible": "Target is invisible.",
+  "RCR.Reason.TargetParalyzed": "Target is paralyzed.",
+  "RCR.Reason.TargetPetrified": "Target is petrified.",
+  "RCR.Reason.TargetProneMelee": "Target is prone — melee has advantage.",
+  "RCR.Reason.TargetProneRanged": "Target is prone — ranged has disadvantage.",
+  "RCR.Reason.TargetRestrained": "Target is restrained.",
+  "RCR.Reason.TargetStunned": "Target is stunned.",
+  "RCR.Reason.TargetUnconscious": "Target is unconscious.",
+
+  "RCR.Target.Prefix": "Target {label}"
+}

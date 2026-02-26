@@ -1,5 +1,8 @@
 // modules/reactionn-combat-rules/scripts/helpers.js
 
+const L = (key) => game.i18n.localize(key);
+const LF = (key, data) => game.i18n.format(key, data);
+
 /* -------------------------------------------------- */
 /*  Grid utilities (size-aware)                        */
 /* -------------------------------------------------- */
@@ -76,28 +79,22 @@ export function isMovementBlocked(origin, destination) {
 
 /* -------------------------------------------------- */
 /*  Adjacency (multi-size aware)                       */
-/*                                                     */
-/*  Two tokens are adjacent if any square of A is      */
-/*  Chebyshev-distance 1 from any square of B, and     */
-/*  their occupied areas don't overlap.                */
 /* -------------------------------------------------- */
 
 export function isAdjacent(tokenA, tokenB) {
   const sqA = occupiedSquares(tokenA);
   const sqB = occupiedSquares(tokenB);
 
-  // Quick overlap / distance check using rects
   const rA = tokenRect(tokenA);
   const rB = tokenRect(tokenB);
-  // If gap > 1 in either axis they can't be adjacent
   const gapX = Math.max(rA.x - (rB.x + rB.w), rB.x - (rA.x + rA.w));
   const gapY = Math.max(rA.y - (rB.y + rB.h), rB.y - (rA.y + rA.h));
-  if (gapX > 0 || gapY > 0) return false; // too far
-  if (gapX < -1 && gapY < -1) return false; // overlapping deeply (shouldn't happen)
+  if (gapX > 0 || gapY > 0) return false;
+  if (gapX < -1 && gapY < -1) return false;
 
   const setB = new Set(sqB.map(s => `${s.gx},${s.gy}`));
   for (const a of sqA) {
-    if (setB.has(`${a.gx},${a.gy}`)) continue; // overlapping square, skip
+    if (setB.has(`${a.gx},${a.gy}`)) continue;
     for (const b of sqB) {
       if (Math.max(Math.abs(a.gx - b.gx), Math.abs(a.gy - b.gy)) === 1) return true;
     }
@@ -107,16 +104,6 @@ export function isAdjacent(tokenA, tokenB) {
 
 /* -------------------------------------------------- */
 /*  Neighbor zones around a target token               */
-/*                                                     */
-/*  For a WxH token, cardinal sides have multiple      */
-/*  neighbor squares. Diagonal corners are single       */
-/*  squares at each corner.                            */
-/*                                                     */
-/*        NW  [--- N ---]  NE                          */
-/*        [|]            [|]                           */
-/*        [W]   target   [E]                           */
-/*        [|]            [|]                           */
-/*        SW  [--- S ---]  SE                          */
 /* -------------------------------------------------- */
 
 const OPPOSITE = { N: "S", S: "N", E: "W", W: "E", NE: "SW", SW: "NE", NW: "SE", SE: "NW" };
@@ -135,7 +122,6 @@ function neighborZones(targetToken) {
   };
 }
 
-/** Which zones does a token touch? Returns Set of zone names. */
 function touchedZones(token, zones) {
   const sq = occupiedSquares(token);
   const sqSet = new Set(sq.map(s => `${s.gx},${s.gy}`));
@@ -155,13 +141,11 @@ function touchedZones(token, zones) {
 /*  Condition checks                                   */
 /* -------------------------------------------------- */
 
-/** Statuses that prevent a creature from contributing to a flank. */
 const INACTIVE_STATUSES = new Set([
   "dead", "prone", "incapacitated", "unconscious",
   "petrified", "stunned", "paralyzed",
 ]);
 
-/** True if the token has any status that makes it unable to act. */
 export function isIncapacitated(token) {
   const statuses = token.actor?.statuses;
   if (!statuses) return false;
@@ -173,19 +157,8 @@ export function isIncapacitated(token) {
 
 /* -------------------------------------------------- */
 /*  Condition-based advantage / disadvantage           */
-/*                                                     */
-/*  Returns { advantages: [], disadvantages: [] }      */
-/*  where each entry is a { label, reason } for the    */
-/*  roll note display.                                 */
 /* -------------------------------------------------- */
 
-/**
- * Evaluate advantage/disadvantage from conditions on attacker and target.
- * @param {Token} attackerToken
- * @param {Token} targetToken
- * @param {string} actionType - mwak, msak, rwak, rsak, natural
- * @returns {{ advantages: {label:string, reason:string}[], disadvantages: {label:string, reason:string}[] }}
- */
 export function getConditionModifiers(attackerToken, targetToken, actionType) {
   const advantages = [];
   const disadvantages = [];
@@ -198,80 +171,66 @@ export function getConditionModifiers(attackerToken, targetToken, actionType) {
 
   // --- Attacker conditions ---
 
-  // Blinded attacker → disadvantage
   if (aStat.has("blinded")) {
-    disadvantages.push({ label: "Blinded", reason: "Attacker is blinded." });
+    disadvantages.push({ label: L("RCR.Condition.Blinded"), reason: L("RCR.Reason.AttackerBlinded") });
   }
 
-  // Frightened attacker → disadvantage (simplified: always applies)
   if (aStat.has("frightened")) {
-    disadvantages.push({ label: "Frightened", reason: "Attacker is frightened." });
+    disadvantages.push({ label: L("RCR.Condition.Frightened"), reason: L("RCR.Reason.AttackerFrightened") });
   }
 
-  // Invisible attacker → advantage
   if (aStat.has("invisible")) {
-    advantages.push({ label: "Invisible", reason: "Attacker is invisible." });
+    advantages.push({ label: L("RCR.Condition.Invisible"), reason: L("RCR.Reason.AttackerInvisible") });
   }
 
-  // Poisoned attacker → disadvantage
   if (aStat.has("poisoned")) {
-    disadvantages.push({ label: "Poisoned", reason: "Attacker is poisoned." });
+    disadvantages.push({ label: L("RCR.Condition.Poisoned"), reason: L("RCR.Reason.AttackerPoisoned") });
   }
 
-  // Prone attacker → disadvantage on attacks
   if (aStat.has("prone")) {
-    disadvantages.push({ label: "Prone", reason: "Attacker is prone." });
+    disadvantages.push({ label: L("RCR.Condition.Prone"), reason: L("RCR.Reason.AttackerProne") });
   }
 
-  // Restrained attacker → disadvantage
   if (aStat.has("restrained")) {
-    disadvantages.push({ label: "Restrained", reason: "Attacker is restrained." });
+    disadvantages.push({ label: L("RCR.Condition.Restrained"), reason: L("RCR.Reason.AttackerRestrained") });
   }
 
   // --- Target conditions ---
 
-  // Blinded target → advantage
   if (tStat.has("blinded")) {
-    advantages.push({ label: "Target Blinded", reason: "Target cannot see the attacker." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Blinded") }), reason: L("RCR.Reason.TargetBlinded") });
   }
 
-  // Invisible target → disadvantage
   if (tStat.has("invisible")) {
-    disadvantages.push({ label: "Target Invisible", reason: "Target is invisible." });
+    disadvantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Invisible") }), reason: L("RCR.Reason.TargetInvisible") });
   }
 
-  // Paralyzed target → advantage
   if (tStat.has("paralyzed")) {
-    advantages.push({ label: "Target Paralyzed", reason: "Target is paralyzed." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Paralyzed") }), reason: L("RCR.Reason.TargetParalyzed") });
   }
 
-  // Petrified target → advantage
   if (tStat.has("petrified")) {
-    advantages.push({ label: "Target Petrified", reason: "Target is petrified." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Petrified") }), reason: L("RCR.Reason.TargetPetrified") });
   }
 
-  // Prone target → advantage if melee, disadvantage if ranged
   if (tStat.has("prone")) {
     if (isMelee) {
-      advantages.push({ label: "Target Prone", reason: "Target is prone — melee has advantage." });
+      advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Prone") }), reason: L("RCR.Reason.TargetProneMelee") });
     } else if (isRanged) {
-      disadvantages.push({ label: "Target Prone", reason: "Target is prone — ranged has disadvantage." });
+      disadvantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Prone") }), reason: L("RCR.Reason.TargetProneRanged") });
     }
   }
 
-  // Restrained target → advantage
   if (tStat.has("restrained")) {
-    advantages.push({ label: "Target Restrained", reason: "Target is restrained." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Restrained") }), reason: L("RCR.Reason.TargetRestrained") });
   }
 
-  // Stunned target → advantage
   if (tStat.has("stunned")) {
-    advantages.push({ label: "Target Stunned", reason: "Target is stunned." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Stunned") }), reason: L("RCR.Reason.TargetStunned") });
   }
 
-  // Unconscious target → advantage
   if (tStat.has("unconscious")) {
-    advantages.push({ label: "Target Unconscious", reason: "Target is unconscious." });
+    advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Unconscious") }), reason: L("RCR.Reason.TargetUnconscious") });
   }
 
   return { advantages, disadvantages };
@@ -279,14 +238,6 @@ export function getConditionModifiers(attackerToken, targetToken, actionType) {
 
 /* -------------------------------------------------- */
 /*  Flanking (multi-size aware)                        */
-/*                                                     */
-/*  Attacker is adjacent to target on some side(s).    */
-/*  An ally is adjacent on the opposite side.           */
-/*  Supports all 8 directions (cardinal + diagonal).   */
-/*                                                     */
-/*  Options:                                           */
-/*    requireActive — if true, the ally must not be    */
-/*    prone/incapacitated/unconscious/etc.             */
 /* -------------------------------------------------- */
 
 export function isFlanking(attackerToken, targetToken, { requireActive = false } = {}) {
@@ -299,7 +250,6 @@ export function isFlanking(attackerToken, targetToken, { requireActive = false }
   const attackerZones = touchedZones(attackerToken, zones);
   if (!attackerZones.size) return false;
 
-  // For each zone the attacker touches, check for an ally on the opposite zone
   return canvas.tokens.placeables.some((t) => {
     if (t === attackerToken || t === targetToken) return false;
     if (!areAllies(t.document, attackerToken.document)) return false;
@@ -316,13 +266,8 @@ export function isFlanking(attackerToken, targetToken, { requireActive = false }
 
 /* -------------------------------------------------- */
 /*  Surrounded (multi-size aware)                      */
-/*                                                     */
-/*  For each cardinal side (N/E/S/W), at least half    */
-/*  (rounded up) of the neighbor squares must be       */
-/*  blocked by an enemy token or a wall.               */
 /* -------------------------------------------------- */
 
-/** Check if a grid square is occupied by a hostile token. */
 function squareHasEnemy(gx, gy, targetToken) {
   const tDoc = targetToken.document;
   return canvas.tokens.placeables.some((t) => {
@@ -333,11 +278,9 @@ function squareHasEnemy(gx, gy, targetToken) {
   });
 }
 
-/** Check if a neighbor square is blocked (enemy OR wall). */
 function squareBlocked(gx, gy, targetToken) {
   if (squareHasEnemy(gx, gy, targetToken)) return true;
 
-  // Wall check: ray from the nearest target square to this neighbor
   const r = tokenRect(targetToken);
   const nearestX = Math.max(r.x, Math.min(r.x + r.w - 1, gx));
   const nearestY = Math.max(r.y, Math.min(r.y + r.h - 1, gy));
@@ -361,7 +304,7 @@ export function isSurrounded(targetToken) {
 
     for (const { gx, gy } of side) {
       if (squareBlocked(gx, gy, targetToken)) blocked++;
-      if (blocked >= needed) return true; // early out
+      if (blocked >= needed) return true;
     }
     return false;
   });
@@ -369,7 +312,6 @@ export function isSurrounded(targetToken) {
 
 /* -------------------------------------------------- */
 /*  High ground                                        */
-/*  Attacker is at least 10 ft higher in elevation.    */
 /* -------------------------------------------------- */
 
 export function hasHighGround(attackerToken, targetToken) {

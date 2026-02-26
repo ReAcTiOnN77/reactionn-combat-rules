@@ -9,24 +9,16 @@ import {
   resolveTokens,
 } from "./helpers.js";
 
+const L = (key) => game.i18n.localize(key);
+
 /* -------------------------------------------------- */
 /*  Track current combat status for the dialog note   */
 /* -------------------------------------------------- */
 
-let pendingStatus = null; // { flanking: bool, surrounded: bool }
+let pendingStatus = null;
 
 /* -------------------------------------------------- */
 /*  Main hook: modify attack rolls                     */
-/*                                                     */
-/*  dnd5e buildConfigure() flow:                       */
-/*    1. preRollAttackV2 hook fires  ← we are here     */
-/*    2. applyKeybindings() runs next                  */
-/*       → reads roll.options.advantage (boolean)      */
-/*       → derives roll.options.advantageMode from it   */
-/*    3. Dialog opens                                  */
-/*       → _buildAttackConfig merges parts into roll   */
-/*       → _prepareButtonsContext reads advantageMode   */
-/*         to highlight the correct button              */
 /* -------------------------------------------------- */
 
 Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
@@ -69,11 +61,26 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
         roll.options.advantage = true;
       }
     } else if (flanking) {
+
       for (const roll of config.rolls ?? []) {
         roll.parts ??= [];
         roll.data ??= {};
+        roll.options ??= {};
         roll.parts.push("@flanking");
+        if (getSetting("flankingBehaviour") == "advantage" ) {
+          roll.options.advantage = true;
+        } else if (getSetting("flankingBehaviour") == "plus1" ) {
+        roll.data.flanking = 1;
+        } else if (getSetting("flankingBehaviour") == "plus2" ) {
         roll.data.flanking = 2;
+        } else if (getSetting("flankingBehaviour") == "plus3" ) {
+        roll.data.flanking = 3;
+        } else if (getSetting("flankingBehaviour") == "plus4" ) {
+        roll.data.flanking = 4;
+        } else if (getSetting("flankingBehaviour") == "plus5" ) {
+        roll.data.flanking = 5;
+        }
+
       }
     }
 
@@ -117,7 +124,6 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
 
 /* -------------------------------------------------- */
 /*  Inject a note into the attack roll dialog          */
-/*  Matches the dnd5e "NOTES" section style.           */
 /* -------------------------------------------------- */
 
 function injectNote(app, element) {
@@ -134,40 +140,71 @@ function injectNote(app, element) {
     if (!surrounded && !flanking && !highGround
         && !condAdvantages?.length && !condDisadvantages?.length) return;
 
-    // Build one or more note entries
     const entries = [];
     if (surrounded) {
       entries.push({
         icon: "fa-solid fa-arrows-to-circle",
-        label: "Surrounded",
-        desc: "All cardinal sides are blocked — attack has advantage.",
+        label: L("RCR.Note.Surrounded.Label"),
+        desc: L("RCR.Note.Surrounded.Desc"),
       });
     } else if (flanking) {
-      entries.push({
-        icon: "fa-solid fa-people-arrows",
-        label: "Flanking",
-        desc: "An ally is on the opposite side — +2 bonus to the attack roll.",
-      });
+        if (getSetting("flankingBehaviour") == "advantage" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.DescAdv"),
+          });
+        } else if (getSetting("flankingBehaviour") == "plus1" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.Desc1"),
+          });
+        } else if (getSetting("flankingBehaviour") == "plus2" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.Desc2"),
+          });
+        } else if (getSetting("flankingBehaviour") == "plus3" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.Desc3"),
+          });
+        } else if (getSetting("flankingBehaviour") == "plus4" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.Desc5"),
+          });
+        } else if (getSetting("flankingBehaviour") == "plus5" ) {
+          entries.push({
+          icon: "fa-solid fa-people-arrows",
+          label: L("RCR.Note.Flanking.Label"),
+          desc:  L("RCR.Note.Flanking.Desc6"),
+          });
+        }
     }
     if (highGround) {
       entries.push({
         icon: "fa-solid fa-mountain",
-        label: "High Ground",
-        desc: "Attacker is 10+ ft above the target — +2 bonus to the attack roll.",
+        label: L("RCR.Note.HighGround.Label"),
+        desc: L("RCR.Note.HighGround.Desc"),
       });
     }
     for (const adv of condAdvantages ?? []) {
       entries.push({
         icon: "fa-solid fa-circle-up",
         label: adv.label,
-        desc: `${adv.reason} Advantage on the attack roll.`,
+        desc: `${adv.reason} ${L("RCR.Note.Advantage")}`,
       });
     }
     for (const dis of condDisadvantages ?? []) {
       entries.push({
         icon: "fa-solid fa-circle-down",
         label: dis.label,
-        desc: `${dis.reason} Disadvantage on the attack roll.`,
+        desc: `${dis.reason} ${L("RCR.Note.Disadvantage")}`,
       });
     }
 
@@ -176,7 +213,7 @@ function injectNote(app, element) {
     const note = document.createElement("fieldset");
     note.className = `${MODULE_ID}-note`;
     note.innerHTML = `
-      <legend>${game.i18n.localize("DND5E.Notes")}</legend>
+      <legend>${L("DND5E.Notes")}</legend>
       ${entries.map(e => `
         <div style="display:flex; align-items:start; gap:0.5rem; padding:0.25rem 0;">
           <i class="${e.icon}" style="margin-top:0.15rem;"></i>
@@ -199,7 +236,6 @@ function injectNote(app, element) {
   }
 }
 
-// Register on all possible hook names (Foundry V2 fires per class in prototype chain)
 for (const hookName of [
   "renderRollConfigurationDialog",
   "renderD20RollConfigurationDialog",
