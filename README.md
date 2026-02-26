@@ -14,7 +14,7 @@ All features are fully toggleable through world settings so GMs can fine-tune co
 When a melee attacker and an ally are positioned on opposite sides of a target, gain **flanking** bonus based on behaviour setting on melee attacks..
 
 #### **Flanking Behaviour Options**
-Choose how flanking should work at your table:
+Choose how Flanking should work at your table:
 - **Advantage**
 - **+1 to hit**
 - **+2 to hit** *(default)*
@@ -31,7 +31,7 @@ Optional rule:
 When all four cardinal spaces around a target are blocked by enemies or walls, attackers gain **surrounded** bonus based on behaviour setting on melee attacks.
 
 #### **Surrounded Behaviour Options**
-Choose how surrounded should work at your table:
+Choose how Surrounded should work at your table:
 - **Advantage** *(default)*
 - **+1 to hit**
 - **+2 to hit** 
@@ -45,7 +45,7 @@ Choose how surrounded should work at your table:
 Ranged weapon and spell attacks gain **High Ground** bonus based on behaviour setting, when the attacker is at least **10 feet above** the target’s elevation.
 
 #### **High Ground Behaviour Options**
-Choose how surrounded should work at your table:
+Choose how High Ground should work at your table:
 - **Advantage** 
 - **+1 to hit**
 - **+2 to hit** *(default)*
