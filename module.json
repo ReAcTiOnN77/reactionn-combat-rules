@@ -28,7 +28,7 @@
     "requires": []
   },
   "esmodules": [
-    "scripts/combat-rules.js""
+    "scripts/combat-rules.js"
   ],
   "languages": [
     {
