@@ -10,6 +10,53 @@ import {
 } from "./helpers.js";
 
 const L = (key) => game.i18n.localize(key);
+const LF = (key, data) => game.i18n.format(key, data);
+
+/* -------------------------------------------------- */
+/*  Behaviour lookup                                   */
+/* -------------------------------------------------- */
+
+const MODIFIERS = { plus1: 1, plus2: 2, plus3: 3, plus4: 4, plus5: 5 };
+
+/**
+ * Apply a bonus (advantage or flat modifier) to rolls.
+ * @param {object} config     The roll process config
+ * @param {string} behaviour  Setting value: "advantage" | "plus1"–"plus5"
+ * @param {string} dataKey    Roll data key, e.g. "flanking", "surrounded", "highGround"
+ */
+function applyBonus(config, behaviour, dataKey) {
+  const mod = MODIFIERS[behaviour];
+  for (const roll of config.rolls ?? []) {
+    roll.options ??= {};
+    if (mod) {
+      roll.parts ??= [];
+      roll.data ??= {};
+      roll.parts.push(`@${dataKey}`);
+      roll.data[dataKey] = mod;
+    } else {
+      roll.options.advantage = true;
+    }
+  }
+  if (!mod) config.advantage = true;
+}
+
+/**
+ * Build a note entry for a positional bonus.
+ * @param {string} icon       FontAwesome class
+ * @param {string} labelKey   Localization key for label
+ * @param {string} advKey     Localization key for advantage description
+ * @param {string} modKey     Localization key for modifier description (uses {value})
+ * @param {string} behaviour  Setting value
+ * @returns {object}          { icon, label, desc }
+ */
+function bonusNote(icon, labelKey, advKey, modKey, behaviour) {
+  const mod = MODIFIERS[behaviour];
+  return {
+    icon,
+    label: L(labelKey),
+    desc: mod ? LF(modKey, { value: mod }) : L(advKey),
+  };
+}
 
 /* -------------------------------------------------- */
 /*  Track current combat status for the dialog note   */
@@ -55,42 +102,13 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
     }
 
     if (surrounded) {
-      config.advantage = true;
-      for (const roll of config.rolls ?? []) {
-        roll.options ??= {};
-        roll.options.advantage = true;
-      }
+      applyBonus(config, getSetting("surroundedBehaviour"), "surrounded");
     } else if (flanking) {
-
-      for (const roll of config.rolls ?? []) {
-        roll.parts ??= [];
-        roll.data ??= {};
-        roll.options ??= {};
-        roll.parts.push("@flanking");
-        if (getSetting("flankingBehaviour") == "advantage" ) {
-          roll.options.advantage = true;
-        } else if (getSetting("flankingBehaviour") == "plus1" ) {
-        roll.data.flanking = 1;
-        } else if (getSetting("flankingBehaviour") == "plus2" ) {
-        roll.data.flanking = 2;
-        } else if (getSetting("flankingBehaviour") == "plus3" ) {
-        roll.data.flanking = 3;
-        } else if (getSetting("flankingBehaviour") == "plus4" ) {
-        roll.data.flanking = 4;
-        } else if (getSetting("flankingBehaviour") == "plus5" ) {
-        roll.data.flanking = 5;
-        }
-
-      }
+      applyBonus(config, getSetting("flankingBehaviour"), "flanking");
     }
 
     if (highGround) {
-      for (const roll of config.rolls ?? []) {
-        roll.parts ??= [];
-        roll.data ??= {};
-        roll.parts.push("@highGround");
-        roll.data.highGround = 2;
-      }
+      applyBonus(config, getSetting("highGroundBehaviour"), "highGround");
     }
 
     // Condition-based advantage / disadvantage
@@ -141,58 +159,35 @@ function injectNote(app, element) {
         && !condAdvantages?.length && !condDisadvantages?.length) return;
 
     const entries = [];
+
     if (surrounded) {
-      entries.push({
-        icon: "fa-solid fa-arrows-to-circle",
-        label: L("RCR.Note.Surrounded.Label"),
-        desc: L("RCR.Note.Surrounded.Desc"),
-      });
+      entries.push(bonusNote(
+        "fa-solid fa-arrows-to-circle",
+        "RCR.Note.Surrounded.Label",
+        "RCR.Note.Surrounded.DescAdv",
+        "RCR.Note.Surrounded.DescMod",
+        getSetting("surroundedBehaviour")
+      ));
     } else if (flanking) {
-        if (getSetting("flankingBehaviour") == "advantage" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.DescAdv"),
-          });
-        } else if (getSetting("flankingBehaviour") == "plus1" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.Desc1"),
-          });
-        } else if (getSetting("flankingBehaviour") == "plus2" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.Desc2"),
-          });
-        } else if (getSetting("flankingBehaviour") == "plus3" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.Desc3"),
-          });
-        } else if (getSetting("flankingBehaviour") == "plus4" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.Desc5"),
-          });
-        } else if (getSetting("flankingBehaviour") == "plus5" ) {
-          entries.push({
-          icon: "fa-solid fa-people-arrows",
-          label: L("RCR.Note.Flanking.Label"),
-          desc:  L("RCR.Note.Flanking.Desc6"),
-          });
-        }
+      entries.push(bonusNote(
+        "fa-solid fa-people-arrows",
+        "RCR.Note.Flanking.Label",
+        "RCR.Note.Flanking.DescAdv",
+        "RCR.Note.Flanking.DescMod",
+        getSetting("flankingBehaviour")
+      ));
     }
+
     if (highGround) {
-      entries.push({
-        icon: "fa-solid fa-mountain",
-        label: L("RCR.Note.HighGround.Label"),
-        desc: L("RCR.Note.HighGround.Desc"),
-      });
+      entries.push(bonusNote(
+        "fa-solid fa-mountain",
+        "RCR.Note.HighGround.Label",
+        "RCR.Note.HighGround.DescAdv",
+        "RCR.Note.HighGround.DescMod",
+        getSetting("highGroundBehaviour")
+      ));
     }
+
     for (const adv of condAdvantages ?? []) {
       entries.push({
         icon: "fa-solid fa-circle-up",

@@ -4,6 +4,17 @@ export const MODULE_ID = "reactionn-combat-rules";
 
 const L = (key) => game.i18n.localize(key);
 
+function behaviourChoices(prefix) {
+  return {
+    advantage: L(`${prefix}.Advantage`),
+    plus1:     L(`${prefix}.Plus1`),
+    plus2:     L(`${prefix}.Plus2`),
+    plus3:     L(`${prefix}.Plus3`),
+    plus4:     L(`${prefix}.Plus4`),
+    plus5:     L(`${prefix}.Plus5`),
+  };
+}
+
 export function registerSettings() {
   game.settings.register(MODULE_ID, "enableFlanking", {
     name: L("RCR.Settings.EnableFlanking.Name"),
@@ -15,19 +26,12 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE_ID, "flankingBehaviour", {
-    name: L("RCR.Settings.flankingBehaviour.Name"),
-    hint: L("RCR.Settings.flankingBehaviour.Hint"),
+    name: L("RCR.Settings.FlankingBehaviour.Name"),
+    hint: L("RCR.Settings.FlankingBehaviour.Hint"),
     scope: "world",
     config: true,
     type: String,
-    choices: {
-      advantage:  L("RCR.Settings.flankingBehaviour.Adv"),
-      plus1:      L("RCR.Settings.flankingBehaviour.Plus1"),
-      plus2:      L("RCR.Settings.flankingBehaviour.Plus2"),
-      plus3:      L("RCR.Settings.flankingBehaviour.Plus3"),
-      plus4:      L("RCR.Settings.flankingBehaviour.Plus4"),
-      plus5:      L("RCR.Settings.flankingBehaviour.Plus5"),
-    },
+    choices: behaviourChoices("RCR.Settings.FlankingBehaviour"),
     default: "plus2",
   });
 
@@ -49,6 +53,16 @@ export function registerSettings() {
     default: true,
   });
 
+  game.settings.register(MODULE_ID, "surroundedBehaviour", {
+    name: L("RCR.Settings.SurroundedBehaviour.Name"),
+    hint: L("RCR.Settings.SurroundedBehaviour.Hint"),
+    scope: "world",
+    config: true,
+    type: String,
+    choices: behaviourChoices("RCR.Settings.SurroundedBehaviour"),
+    default: "advantage",
+  });
+
   game.settings.register(MODULE_ID, "enableHighGround", {
     name: L("RCR.Settings.EnableHighGround.Name"),
     hint: L("RCR.Settings.EnableHighGround.Hint"),
@@ -56,6 +70,16 @@ export function registerSettings() {
     config: true,
     type: Boolean,
     default: true,
+  });
+
+  game.settings.register(MODULE_ID, "highGroundBehaviour", {
+    name: L("RCR.Settings.HighGroundBehaviour.Name"),
+    hint: L("RCR.Settings.HighGroundBehaviour.Hint"),
+    scope: "world",
+    config: true,
+    type: String,
+    choices: behaviourChoices("RCR.Settings.HighGroundBehaviour"),
+    default: "plus2",
   });
 
   game.settings.register(MODULE_ID, "enableConditionAdvantage", {
