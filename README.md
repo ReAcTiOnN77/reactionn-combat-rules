@@ -28,7 +28,7 @@ Optional rule:
 ---
 
 ### **Surrounded**
-When all four cardinal spaces around a target are at least 50% blocked by enemies or walls, attackers gain **surrounded** bonus based on behaviour setting on melee attacks.
+When all four cardinal spaces around a target are at least 50% blocked each by enemies or walls, attackers gain **surrounded** bonus based on behaviour setting on melee attacks.
 
 #### **Surrounded Behaviour Options**
 Choose how Surrounded should work at your table:
