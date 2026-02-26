@@ -1,34 +1,34 @@
 {
-  "id": "module",
-  "title": "New Module",
+  "id": "reactionn-combat-rules",
+  "title": "ReAcTiOnN's Combat Rules",
   "description": "",
   "version": "#{VERSION}#",
   "library": "false",
   "manifestPlusVersion": "1.2.0",
   "compatibility": {
-    "minimum": 10,
-    "verified": 10,
-    "maximum": 11
+    "minimum": 13,
+    "verified": 13.351,
+    "maximum": 13
   },
   "authors": [
     {
-      "name": "The League of Extraordinary FVTT Developers",
-      "url": "https://github.com/League-of-Foundry-Developers",
-      "discord": "discordID#0001"
+      "name": "ReAcTiOnN",
+      "url": "https://github.com/ReAcTiOnN77",
+      "discord": "reactionn"
     }
   ],
-  "relationships": {
-    "systems": [],
+   "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {}
+      }
+    ],
     "requires": []
   },
   "esmodules": [
-    "scripts/module.js"
-  ],
-  "scripts": [
-    "scripts/lib/lib.js"
-  ],
-  "styles": [
-    "styles/module.css"
+    "scripts/combat-rules.js""
   ],
   "languages": [
     {
