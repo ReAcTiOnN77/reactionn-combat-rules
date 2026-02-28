@@ -210,6 +210,23 @@ export async function showRecoveryDialog(actor, usedItems) {
 }
 
 /* -------------------------------------------------- */
+/*  Socket                                             */
+/* -------------------------------------------------- */
+
+const SOCKET_NAME = `module.${MODULE_ID}`;
+
+export function registerSocketListener() {
+  game.socket.on(SOCKET_NAME, (data) => {
+    if (data?.type !== "ammoRecovery") return;
+
+    const actor = game.actors.get(data.actorId);
+    if (!actor || !actor.isOwner) return;
+
+    showRecoveryDialog(actor, data.items);
+  });
+}
+
+/* -------------------------------------------------- */
 /*  Combat hooks                                       */
 /* -------------------------------------------------- */
 
@@ -222,7 +239,6 @@ export async function onCombatUpdate(combat, change) {
   const snapshot = snapshotAmmo(combat);
   if (Object.keys(snapshot).length) {
     await combat.setFlag(MODULE_ID, "ammoSnapshot", snapshot);
-    console.log(`${MODULE_ID} | Ammo snapshot saved for combat ${combat.id}`);
   }
 }
 
@@ -258,18 +274,20 @@ export async function onCombatantCreate(combatant) {
     ...existing,
     [actor.id]: actorSnapshot,
   });
-  console.log(`${MODULE_ID} | Ammo snapshot updated - added ${actor.name}`);
 }
 
-// Cache snapshot before the combat document gets deleted
+// GM caches snapshot before the combat document gets deleted
 export function onCombatPreDelete(combat) {
+  if (!game.user.isGM) return;
   if (!getSetting("enableAmmoTracking")) return;
+
   const snapshot = combat.getFlag(MODULE_ID, "ammoSnapshot");
   if (snapshot) pendingSnapshots.set(combat.id, snapshot);
 }
 
-// Show recovery dialogs to each player that owns an actor with consumed ammo
+// GM calculates results, emits socket for players, shows own dialog as fallback
 export function onCombatDelete(combat) {
+  if (!game.user.isGM) return;
   if (!getSetting("enableAmmoTracking")) return;
 
   const snapshot = pendingSnapshots.get(combat.id);
@@ -278,8 +296,23 @@ export function onCombatDelete(combat) {
 
   const results = calculateUsed(snapshot);
 
-  for (const { actor, items } of results) {
-    if (!actor.isOwner) continue;
-    showRecoveryDialog(actor, items);
+  for (const { actorId, actor, items } of results) {
+    let hasOnlinePlayer = false;
+    const owners = actor.ownership ?? {};
+    for (const [uid, level] of Object.entries(owners)) {
+      if (uid === "default") continue;
+      if (level < 3) continue;
+      const u = game.users.get(uid);
+      if (u && !u.isGM && u.active) {
+        hasOnlinePlayer = true;
+        break;
+      }
+    }
+
+    if (hasOnlinePlayer) {
+      game.socket.emit(SOCKET_NAME, { type: "ammoRecovery", actorId, items });
+    } else {
+      showRecoveryDialog(actor, items);
+    }
   }
 }

@@ -12,6 +12,7 @@ import {
   onCombatantCreate,
   onCombatPreDelete,
   onCombatDelete,
+  registerSocketListener,
 } from "./ammo-tracker.js";
 
 const L = (key) => game.i18n.localize(key);
@@ -243,5 +244,6 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", () => {
+  registerSocketListener();
   console.log(`${MODULE_ID} | Combat Rules loaded`);
 });
