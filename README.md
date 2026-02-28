@@ -41,8 +41,8 @@ Choose how Surrounded should work at your table:
 
 ---
 
-### **High Ground**
-Ranged weapon and spell attacks gain **High Ground** bonus based on behaviour setting, when the attacker is at least **10 feet above** the target’s elevation.
+### **Elevation**
+Ranged weapon and spell attacks gain **Elevation** bonus/penalty based on behaviour setting, when the attacker is at least **10 feet above/below** the target’s elevation.
 
 #### **High Ground Behaviour Options**
 Choose how High Ground should work at your table:
@@ -52,6 +52,16 @@ Choose how High Ground should work at your table:
 - **+3 to hit**
 - **+4 to hit**
 - **+5 to hit**
+---
+
+#### **Low Ground Behaviour Options**
+Choose how Low Ground should work at your table:
+- **Disadvantage** 
+- **-1 to hit**
+- **-2 to hit** *(default)*
+- **-3 to hit**
+- **-4 to hit**
+- **-5 to hit**
 ---
 
 ### **Condition-Based Advantage/Disadvantage**
@@ -68,16 +78,11 @@ Automatically applies advantage or disadvantage based on common status condition
 
 ---
 
-## Settings
+### **Ammo Tracking**
+Tracks how much ammunition is used during combat then prompts the player to recover half used
 
-All features can be turned on or off individually via **Game Settings → Module Settings**:
+- Option to recover magical ammo
 
-- Enable Flanking
-- Flanking Behaviour (Advantage or +1 to +5)
-- Flanking Requires Active Ally  
-- Enable Surrounded  
-- Enable High Ground  
-- Condition-Based Advantage/Disadvantage  
 
 ---
 
