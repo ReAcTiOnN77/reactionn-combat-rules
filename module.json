@@ -27,6 +27,7 @@
     ],
     "requires": []
   },
+  "socket": true,
   "esmodules": [
     "scripts/combat-rules.js"
   ],
