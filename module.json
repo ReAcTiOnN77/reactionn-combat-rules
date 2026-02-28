@@ -30,6 +30,9 @@
   "esmodules": [
     "scripts/combat-rules.js"
   ],
+  "styles": [
+    "styles/styles.css"
+  ],
   "languages": [
     {
       "lang": "en",
