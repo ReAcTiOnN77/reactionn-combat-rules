@@ -1,65 +1,64 @@
-// modules/reactionn-combat-rules/scripts/combat-rules.js
-
 import { MODULE_ID, registerSettings, getSetting } from "./config.js";
 import {
   isFlanking,
   isSurrounded,
   hasHighGround,
+  hasLowGround,
   getConditionModifiers,
   resolveTokens,
 } from "./helpers.js";
+import {
+  onCombatUpdate,
+  onCombatantCreate,
+  onCombatPreDelete,
+  onCombatDelete,
+} from "./ammo-tracker.js";
 
 const L = (key) => game.i18n.localize(key);
 const LF = (key, data) => game.i18n.format(key, data);
 
 /* -------------------------------------------------- */
-/*  Behaviour lookup                                   */
+/*  Behaviour lookups                                  */
 /* -------------------------------------------------- */
 
 const MODIFIERS = { plus1: 1, plus2: 2, plus3: 3, plus4: 4, plus5: 5 };
+const PENALTIES = { minus1: -1, minus2: -2, minus3: -3, minus4: -4, minus5: -5 };
 
-/**
- * Apply a bonus (advantage or flat modifier) to rolls.
- * @param {object} config     The roll process config
- * @param {string} behaviour  Setting value: "advantage" | "plus1"–"plus5"
- * @param {string} dataKey    Roll data key, e.g. "flanking", "surrounded", "highGround"
- */
-function applyBonus(config, behaviour, dataKey) {
-  const mod = MODIFIERS[behaviour];
+// Handles both bonuses and penalties depending on which lookup the key falls into
+function applyModifier(config, behaviour, dataKey) {
+  const value = MODIFIERS[behaviour] ?? PENALTIES[behaviour];
+  const isAdv = behaviour === "advantage";
+  const isDisadv = behaviour === "disadvantage";
+
   for (const roll of config.rolls ?? []) {
     roll.options ??= {};
-    if (mod) {
+    if (value) {
       roll.parts ??= [];
       roll.data ??= {};
       roll.parts.push(`@${dataKey}`);
-      roll.data[dataKey] = mod;
-    } else {
+      roll.data[dataKey] = value;
+    } else if (isAdv) {
       roll.options.advantage = true;
+    } else if (isDisadv) {
+      roll.options.disadvantage = true;
     }
   }
-  if (!mod) config.advantage = true;
+
+  if (isAdv) config.advantage = true;
+  if (isDisadv) config.disadvantage = true;
 }
 
-/**
- * Build a note entry for a positional bonus.
- * @param {string} icon       FontAwesome class
- * @param {string} labelKey   Localization key for label
- * @param {string} advKey     Localization key for advantage description
- * @param {string} modKey     Localization key for modifier description (uses {value})
- * @param {string} behaviour  Setting value
- * @returns {object}          { icon, label, desc }
- */
-function bonusNote(icon, labelKey, advKey, modKey, behaviour) {
-  const mod = MODIFIERS[behaviour];
+function buildNote(icon, labelKey, advDisadvKey, modKey, behaviour) {
+  const value = MODIFIERS[behaviour] ?? PENALTIES[behaviour];
   return {
     icon,
     label: L(labelKey),
-    desc: mod ? LF(modKey, { value: mod }) : L(advKey),
+    desc: value ? LF(modKey, { value }) : L(advDisadvKey),
   };
 }
 
 /* -------------------------------------------------- */
-/*  Track current combat status for the dialog note   */
+/*  Track current combat status for the dialog note    */
 /* -------------------------------------------------- */
 
 let pendingStatus = null;
@@ -82,6 +81,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
     let surrounded = false;
     let flanking = false;
     let highGround = false;
+    let lowGround = false;
 
     if (isMelee) {
       surrounded = getSetting("enableSurrounded") && isSurrounded(targetToken);
@@ -95,23 +95,21 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
     if (isRanged) {
       highGround = getSetting("enableHighGround")
         && hasHighGround(attackerToken, targetToken);
+      lowGround = !highGround
+        && getSetting("enableLowGround")
+        && hasLowGround(attackerToken, targetToken);
     }
 
-    if (!surrounded && !flanking && !highGround) {
+    if (!surrounded && !flanking && !highGround && !lowGround) {
       if (!getSetting("enableConditionAdvantage")) return true;
     }
 
-    if (surrounded) {
-      applyBonus(config, getSetting("surroundedBehaviour"), "surrounded");
-    } else if (flanking) {
-      applyBonus(config, getSetting("flankingBehaviour"), "flanking");
-    }
+    if (surrounded) applyModifier(config, getSetting("surroundedBehaviour"), "surrounded");
+    else if (flanking) applyModifier(config, getSetting("flankingBehaviour"), "flanking");
 
-    if (highGround) {
-      applyBonus(config, getSetting("highGroundBehaviour"), "highGround");
-    }
+    if (highGround) applyModifier(config, getSetting("highGroundBehaviour"), "highGround");
+    if (lowGround) applyModifier(config, getSetting("lowGroundBehaviour"), "lowGround");
 
-    // Condition-based advantage / disadvantage
     let condAdvantages = [];
     let condDisadvantages = [];
 
@@ -131,11 +129,11 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
       }
     }
 
-    pendingStatus = { surrounded, flanking, highGround, condAdvantages, condDisadvantages };
+    pendingStatus = { surrounded, flanking, highGround, lowGround, condAdvantages, condDisadvantages };
 
     return true;
   } catch (e) {
-    console.error(`[${MODULE_ID}]`, "preRollAttackV2 error:", e);
+    console.error(`${MODULE_ID} | preRollAttackV2 error:`, e);
     return true;
   }
 });
@@ -151,41 +149,30 @@ function injectNote(app, element) {
 
     const el = element instanceof HTMLElement ? element : element?.[0];
     if (!el) return;
-
     if (el.querySelector(`.${MODULE_ID}-note`)) return;
 
-    const { surrounded, flanking, highGround, condAdvantages, condDisadvantages } = pendingStatus;
-    if (!surrounded && !flanking && !highGround
+    const { surrounded, flanking, highGround, lowGround, condAdvantages, condDisadvantages } = pendingStatus;
+    if (!surrounded && !flanking && !highGround && !lowGround
         && !condAdvantages?.length && !condDisadvantages?.length) return;
 
     const entries = [];
 
     if (surrounded) {
-      entries.push(bonusNote(
-        "fa-solid fa-arrows-to-circle",
-        "RCR.Note.Surrounded.Label",
-        "RCR.Note.Surrounded.DescAdv",
-        "RCR.Note.Surrounded.DescMod",
-        getSetting("surroundedBehaviour")
-      ));
+      entries.push(buildNote("fa-solid fa-arrows-to-circle", "RCR.Note.Surrounded.Label",
+        "RCR.Note.Surrounded.DescAdv", "RCR.Note.Surrounded.DescMod", getSetting("surroundedBehaviour")));
     } else if (flanking) {
-      entries.push(bonusNote(
-        "fa-solid fa-people-arrows",
-        "RCR.Note.Flanking.Label",
-        "RCR.Note.Flanking.DescAdv",
-        "RCR.Note.Flanking.DescMod",
-        getSetting("flankingBehaviour")
-      ));
+      entries.push(buildNote("fa-solid fa-people-arrows", "RCR.Note.Flanking.Label",
+        "RCR.Note.Flanking.DescAdv", "RCR.Note.Flanking.DescMod", getSetting("flankingBehaviour")));
     }
 
     if (highGround) {
-      entries.push(bonusNote(
-        "fa-solid fa-mountain",
-        "RCR.Note.HighGround.Label",
-        "RCR.Note.HighGround.DescAdv",
-        "RCR.Note.HighGround.DescMod",
-        getSetting("highGroundBehaviour")
-      ));
+      entries.push(buildNote("fa-solid fa-mountain", "RCR.Note.HighGround.Label",
+        "RCR.Note.HighGround.DescAdv", "RCR.Note.HighGround.DescMod", getSetting("highGroundBehaviour")));
+    }
+
+    if (lowGround) {
+      entries.push(buildNote("fa-solid fa-mountain-sun", "RCR.Note.LowGround.Label",
+        "RCR.Note.LowGround.DescDisadv", "RCR.Note.LowGround.DescMod", getSetting("lowGroundBehaviour")));
     }
 
     for (const adv of condAdvantages ?? []) {
@@ -221,13 +208,10 @@ function injectNote(app, element) {
     `;
 
     const buttons = el.querySelector(".form-footer, [data-application-part='buttons']");
-    if (buttons) {
-      buttons.parentNode.insertBefore(note, buttons);
-    } else {
-      el.appendChild(note);
-    }
+    if (buttons) buttons.parentNode.insertBefore(note, buttons);
+    else el.appendChild(note);
   } catch (err) {
-    // Silently ignore — cosmetic only
+    // Cosmetic only
   }
 }
 
@@ -242,6 +226,15 @@ for (const hookName of [
 }
 
 /* -------------------------------------------------- */
+/*  Ammo tracker hooks                                 */
+/* -------------------------------------------------- */
+
+Hooks.on("updateCombat", onCombatUpdate);
+Hooks.on("createCombatant", onCombatantCreate);
+Hooks.on("preDeleteCombat", onCombatPreDelete);
+Hooks.on("deleteCombat", onCombatDelete);
+
+/* -------------------------------------------------- */
 /*  Init & Ready                                       */
 /* -------------------------------------------------- */
 
@@ -250,5 +243,5 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", () => {
-  console.log(`[${MODULE_ID}] Combat Rules loaded.`);
+  console.log(`${MODULE_ID} | Combat Rules loaded`);
 });

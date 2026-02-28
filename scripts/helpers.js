@@ -1,15 +1,12 @@
-// modules/reactionn-combat-rules/scripts/helpers.js
-
 const L = (key) => game.i18n.localize(key);
 const LF = (key, data) => game.i18n.format(key, data);
 
 /* -------------------------------------------------- */
-/*  Grid utilities (size-aware)                        */
+/*  Grid utilities                                     */
 /* -------------------------------------------------- */
 
 const gs = () => canvas.grid.size || 1;
 
-/** Grid rect for a token: top-left in grid coords + size in squares. */
 export function tokenRect(token) {
   const g = gs();
   const rawW = token.document.width || 1;
@@ -22,7 +19,6 @@ export function tokenRect(token) {
   };
 }
 
-/** All grid squares a token occupies: [{gx, gy}, …] */
 export function occupiedSquares(token) {
   const r = tokenRect(token);
   const out = [];
@@ -34,7 +30,6 @@ export function occupiedSquares(token) {
   return out;
 }
 
-/** Pixel center of a grid square. */
 function squareCenter(gx, gy) {
   const g = gs();
   return { x: (gx + 0.5) * g, y: (gy + 0.5) * g };
@@ -58,13 +53,14 @@ export function areAllies(aDoc, bDoc) {
 /*  Wall collision                                     */
 /* -------------------------------------------------- */
 
+// Try polygon backend first, fall back to legacy walls layer
 export function isMovementBlocked(origin, destination) {
   try {
     const backend = CONFIG.Canvas?.polygonBackends?.move;
     if (backend?.testCollision) {
       return backend.testCollision(origin, destination, { type: "move", mode: "any" });
     }
-  } catch { /* fall through */ }
+  } catch {}
 
   try {
     const walls = canvas.walls;
@@ -72,7 +68,7 @@ export function isMovementBlocked(origin, destination) {
       const ray = new foundry.canvas.geometry.Ray(origin, destination);
       return walls.checkCollision(ray, { type: "move", mode: "any" });
     }
-  } catch { /* ignore */ }
+  } catch {}
 
   return false;
 }
@@ -169,69 +165,43 @@ export function getConditionModifiers(attackerToken, targetToken, actionType) {
   const isMelee = ["mwak", "msak", "natural"].includes(actionType);
   const isRanged = ["rwak", "rsak"].includes(actionType);
 
-  // --- Attacker conditions ---
-
-  if (aStat.has("blinded")) {
+  // Attacker
+  if (aStat.has("blinded"))
     disadvantages.push({ label: L("RCR.Condition.Blinded"), reason: L("RCR.Reason.AttackerBlinded") });
-  }
-
-  if (aStat.has("frightened")) {
+  if (aStat.has("frightened"))
     disadvantages.push({ label: L("RCR.Condition.Frightened"), reason: L("RCR.Reason.AttackerFrightened") });
-  }
-
-  if (aStat.has("invisible")) {
+  if (aStat.has("invisible"))
     advantages.push({ label: L("RCR.Condition.Invisible"), reason: L("RCR.Reason.AttackerInvisible") });
-  }
-
-  if (aStat.has("poisoned")) {
+  if (aStat.has("poisoned"))
     disadvantages.push({ label: L("RCR.Condition.Poisoned"), reason: L("RCR.Reason.AttackerPoisoned") });
-  }
-
-  if (aStat.has("prone")) {
+  if (aStat.has("prone"))
     disadvantages.push({ label: L("RCR.Condition.Prone"), reason: L("RCR.Reason.AttackerProne") });
-  }
-
-  if (aStat.has("restrained")) {
+  if (aStat.has("restrained"))
     disadvantages.push({ label: L("RCR.Condition.Restrained"), reason: L("RCR.Reason.AttackerRestrained") });
-  }
 
-  // --- Target conditions ---
-
-  if (tStat.has("blinded")) {
+  // Target
+  if (tStat.has("blinded"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Blinded") }), reason: L("RCR.Reason.TargetBlinded") });
-  }
-
-  if (tStat.has("invisible")) {
+  if (tStat.has("invisible"))
     disadvantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Invisible") }), reason: L("RCR.Reason.TargetInvisible") });
-  }
-
-  if (tStat.has("paralyzed")) {
+  if (tStat.has("paralyzed"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Paralyzed") }), reason: L("RCR.Reason.TargetParalyzed") });
-  }
-
-  if (tStat.has("petrified")) {
+  if (tStat.has("petrified"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Petrified") }), reason: L("RCR.Reason.TargetPetrified") });
-  }
 
   if (tStat.has("prone")) {
-    if (isMelee) {
+    if (isMelee)
       advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Prone") }), reason: L("RCR.Reason.TargetProneMelee") });
-    } else if (isRanged) {
+    else if (isRanged)
       disadvantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Prone") }), reason: L("RCR.Reason.TargetProneRanged") });
-    }
   }
 
-  if (tStat.has("restrained")) {
+  if (tStat.has("restrained"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Restrained") }), reason: L("RCR.Reason.TargetRestrained") });
-  }
-
-  if (tStat.has("stunned")) {
+  if (tStat.has("stunned"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Stunned") }), reason: L("RCR.Reason.TargetStunned") });
-  }
-
-  if (tStat.has("unconscious")) {
+  if (tStat.has("unconscious"))
     advantages.push({ label: LF("RCR.Target.Prefix", { label: L("RCR.Condition.Unconscious") }), reason: L("RCR.Reason.TargetUnconscious") });
-  }
 
   return { advantages, disadvantages };
 }
@@ -311,13 +281,19 @@ export function isSurrounded(targetToken) {
 }
 
 /* -------------------------------------------------- */
-/*  High ground                                        */
+/*  Elevation - 10ft threshold                         */
 /* -------------------------------------------------- */
 
 export function hasHighGround(attackerToken, targetToken) {
   const aElev = attackerToken.document.elevation ?? 0;
   const tElev = targetToken.document.elevation ?? 0;
   return (aElev - tElev) >= 10;
+}
+
+export function hasLowGround(attackerToken, targetToken) {
+  const aElev = attackerToken.document.elevation ?? 0;
+  const tElev = targetToken.document.elevation ?? 0;
+  return (tElev - aElev) >= 10;
 }
 
 /* -------------------------------------------------- */
@@ -332,7 +308,6 @@ export function resolveTokens(config) {
   const actionType = subject?.actionType
     ?? subject?.item?.system?.actionType
     ?? config.item?.system?.actionType;
-
   if (!actionType) return null;
 
   const attackerToken =

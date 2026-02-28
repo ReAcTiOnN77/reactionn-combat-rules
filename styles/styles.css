@@ -1,0 +1,38 @@
+.reactionn-combat-rules-note {
+  border: 1px solid var(--dnd5e-color-card-border, rgba(255, 255, 255, 0.1));
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  font-size: var(--font-size-13, 13px);
+}
+
+.reactionn-combat-rules-note legend {
+  font-family: var(--dnd5e-font-roboto, Roboto, sans-serif);
+  font-size: var(--font-size-10, 10px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  padding: 0 0.25rem;
+}
+
+/* Settings sub-menus */
+form.rcr-settings .form-group select {
+  max-width: 50%;
+}
+
+form.rcr-settings fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+form.rcr-settings fieldset > legend {
+  display: none;
+}
+
+form.rcr-settings hr {
+  border: none;
+  border-top: 1px solid var(--color-border-light-tertiary, rgba(255,255,255,0.1));
+  margin: 0.25rem 0;
+}

@@ -1,0 +1,33 @@
+<fieldset>
+  <legend>{{localize "RCR.Settings.Elevation.Legend"}}</legend>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.EnableHighGround.Name"}}</label>
+    <input type="checkbox" name="enableHighGround" {{checked enableHighGround}}>
+    <p class="hint">{{localize "RCR.Settings.EnableHighGround.Hint"}}</p>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.HighGroundBehaviour.Name"}}</label>
+    <select name="highGroundBehaviour">
+      {{selectOptions advChoices selected=highGroundBehaviour}}
+    </select>
+    <p class="hint">{{localize "RCR.Settings.HighGroundBehaviour.Hint"}}</p>
+  </div>
+
+  <hr>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.EnableLowGround.Name"}}</label>
+    <input type="checkbox" name="enableLowGround" {{checked enableLowGround}}>
+    <p class="hint">{{localize "RCR.Settings.EnableLowGround.Hint"}}</p>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.LowGroundBehaviour.Name"}}</label>
+    <select name="lowGroundBehaviour">
+      {{selectOptions disadvChoices selected=lowGroundBehaviour}}
+    </select>
+    <p class="hint">{{localize "RCR.Settings.LowGroundBehaviour.Hint"}}</p>
+  </div>
+</fieldset>

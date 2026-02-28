@@ -1,0 +1,17 @@
+<fieldset>
+  <legend>{{localize "RCR.Settings.Surrounded.Legend"}}</legend>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.EnableSurrounded.Name"}}</label>
+    <input type="checkbox" name="enableSurrounded" {{checked enableSurrounded}}>
+    <p class="hint">{{localize "RCR.Settings.EnableSurrounded.Hint"}}</p>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "RCR.Settings.SurroundedBehaviour.Name"}}</label>
+    <select name="surroundedBehaviour">
+      {{selectOptions advChoices selected=surroundedBehaviour}}
+    </select>
+    <p class="hint">{{localize "RCR.Settings.SurroundedBehaviour.Hint"}}</p>
+  </div>
+</fieldset>
