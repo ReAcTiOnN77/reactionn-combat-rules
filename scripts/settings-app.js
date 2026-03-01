@@ -91,7 +91,7 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
 /* -------------------------------------------------- */
 
 export class FlankingSettings extends RCRSettingsBase {
-  static SETTING_KEYS = ["enableFlanking", "flankingBehaviour", "flankingRequiresActive"];
+  static SETTING_KEYS = ["enableFlanking", "flankingBehaviour", "flankingRequiresActive", "flankingNoDaisyChain"];
 
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     id: "rcr-settings-flanking",

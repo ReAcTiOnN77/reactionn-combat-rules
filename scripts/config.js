@@ -9,7 +9,7 @@ import {
 export const MODULE_ID = "reactionn-combat-rules";
 
 export const SETTING_KEYS = [
-  "enableFlanking", "flankingBehaviour", "flankingRequiresActive",
+  "enableFlanking", "flankingBehaviour", "flankingRequiresActive", "flankingNoDaisyChain",
   "enableSurrounded", "surroundedBehaviour",
   "enableHighGround", "highGroundBehaviour",
   "enableLowGround", "lowGroundBehaviour",
@@ -45,6 +45,11 @@ export function registerSettings() {
   game.settings.register(MODULE_ID, "flankingRequiresActive", {
     name: "RCR.Settings.FlankingRequiresActive.Name",
     scope: "world", config: false, type: Boolean, default: true,
+  });
+
+  game.settings.register(MODULE_ID, "flankingNoDaisyChain", {
+    name: "RCR.Settings.FlankingNoDaisyChain.Name",
+    scope: "world", config: false, type: Boolean, default: false,
   });
 
   /* ============================================== */

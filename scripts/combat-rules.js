@@ -90,6 +90,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
         && getSetting("enableFlanking")
         && isFlanking(attackerToken, targetToken, {
           requireActive: getSetting("flankingRequiresActive"),
+          noDaisyChain: getSetting("flankingNoDaisyChain"),
         });
     }
 

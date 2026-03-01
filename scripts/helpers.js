@@ -7,6 +7,21 @@ const LF = (key, data) => game.i18n.format(key, data);
 
 const gs = () => canvas.grid.size || 1;
 
+const HEX_TYPES = new Set([
+  CONST.GRID_TYPES.HEXODDR,
+  CONST.GRID_TYPES.HEXEVENR,
+  CONST.GRID_TYPES.HEXODDQ,
+  CONST.GRID_TYPES.HEXEVENQ,
+]);
+
+function isHexGrid() {
+  return HEX_TYPES.has(canvas.grid.type);
+}
+
+/* -------------------------------------------------- */
+/*  Square grid utilities                              */
+/* -------------------------------------------------- */
+
 export function tokenRect(token) {
   const g = gs();
   const rawW = token.document.width || 1;
@@ -33,6 +48,41 @@ export function occupiedSquares(token) {
 function squareCenter(gx, gy) {
   const g = gs();
   return { x: (gx + 0.5) * g, y: (gy + 0.5) * g };
+}
+
+/* -------------------------------------------------- */
+/*  Hex grid utilities                                 */
+/* -------------------------------------------------- */
+
+// Pixel center of the hex cell a token occupies
+function tokenHexCenter(token) {
+  const off = canvas.grid.getOffset({ x: token.document.x, y: token.document.y });
+  return canvas.grid.getCenterPoint(off);
+}
+
+// Grid offset {i, j} for a token's primary hex cell
+function tokenOffset(token) {
+  return canvas.grid.getOffset({ x: token.document.x, y: token.document.y });
+}
+
+function offsetEq(a, b) {
+  return a.i === b.i && a.j === b.j;
+}
+
+// 6 neighbor offsets via angle probing - works for both pointy and flat top.
+// Direction (n+3)%6 is always the opposite of direction n.
+function hexNeighbors(token) {
+  const center = tokenHexCenter(token);
+  const g = gs();
+  const neighbors = [];
+  for (let d = 0; d < 6; d++) {
+    const angle = d * Math.PI / 3;
+    neighbors.push(canvas.grid.getOffset({
+      x: center.x + Math.cos(angle) * g,
+      y: center.y + Math.sin(angle) * g,
+    }));
+  }
+  return neighbors;
 }
 
 /* -------------------------------------------------- */
@@ -74,10 +124,17 @@ export function isMovementBlocked(origin, destination) {
 }
 
 /* -------------------------------------------------- */
-/*  Adjacency (multi-size aware)                       */
+/*  Adjacency                                          */
 /* -------------------------------------------------- */
 
 export function isAdjacent(tokenA, tokenB) {
+  if (isHexGrid()) {
+    const neighbors = hexNeighbors(tokenB);
+    const offA = tokenOffset(tokenA);
+    return neighbors.some(n => offsetEq(n, offA));
+  }
+
+  // Square grid (multi-size aware)
   const sqA = occupiedSquares(tokenA);
   const sqB = occupiedSquares(tokenB);
 
@@ -99,7 +156,7 @@ export function isAdjacent(tokenA, tokenB) {
 }
 
 /* -------------------------------------------------- */
-/*  Neighbor zones around a target token               */
+/*  Neighbor zones around a target (square grid)       */
 /* -------------------------------------------------- */
 
 const OPPOSITE = { N: "S", S: "N", E: "W", W: "E", NE: "SW", SW: "NE", NW: "SE", SE: "NW" };
@@ -207,14 +264,104 @@ export function getConditionModifiers(attackerToken, targetToken, actionType) {
 }
 
 /* -------------------------------------------------- */
-/*  Flanking (multi-size aware)                        */
+/*  Daisy chain check (non-recursive)                  */
 /* -------------------------------------------------- */
 
-export function isFlanking(attackerToken, targetToken, { requireActive = false } = {}) {
-  if (!canvas?.ready) return false;
+// Returns true if enemies occupy opposite sides of this token
+function isGeometricallyFlanked(token) {
+  if (isHexGrid()) {
+    const neighbors = hexNeighbors(token);
+    for (let d = 0; d < 3; d++) {
+      const offD = neighbors[d];
+      const offOpp = neighbors[(d + 3) % 6];
+      const enemyInD = canvas.tokens.placeables.some(t => {
+        if (t === token) return false;
+        if (!areEnemies(t.document, token.document)) return false;
+        return offsetEq(tokenOffset(t), offD);
+      });
+      if (!enemyInD) continue;
+      const enemyInOpp = canvas.tokens.placeables.some(t => {
+        if (t === token) return false;
+        if (!areEnemies(t.document, token.document)) return false;
+        return offsetEq(tokenOffset(t), offOpp);
+      });
+      if (enemyInOpp) return true;
+    }
+    return false;
+  }
+
   if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE) return false;
+
+  const zones = neighborZones(token);
+  const checked = new Set();
+  for (const [dir, opp] of Object.entries(OPPOSITE)) {
+    const pairKey = dir < opp ? `${dir}-${opp}` : `${opp}-${dir}`;
+    if (checked.has(pairKey)) continue;
+    checked.add(pairKey);
+
+    const hasEnemyInDir = zones[dir].some(({ gx, gy }) =>
+      canvas.tokens.placeables.some(t => {
+        if (t === token) return false;
+        if (!areEnemies(t.document, token.document)) return false;
+        const r = tokenRect(t);
+        return gx >= r.x && gx < r.x + r.w && gy >= r.y && gy < r.y + r.h;
+      })
+    );
+    if (!hasEnemyInDir) continue;
+
+    const hasEnemyInOpp = zones[opp].some(({ gx, gy }) =>
+      canvas.tokens.placeables.some(t => {
+        if (t === token) return false;
+        if (!areEnemies(t.document, token.document)) return false;
+        const r = tokenRect(t);
+        return gx >= r.x && gx < r.x + r.w && gy >= r.y && gy < r.y + r.h;
+      })
+    );
+    if (hasEnemyInOpp) return true;
+  }
+  return false;
+}
+
+/* -------------------------------------------------- */
+/*  Flanking                                           */
+/* -------------------------------------------------- */
+
+export function isFlanking(attackerToken, targetToken, { requireActive = false, noDaisyChain = false } = {}) {
+  if (!canvas?.ready) return false;
+
+  if (isHexGrid()) return isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain);
+  if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE) return false;
+  return isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain);
+}
+
+// Hex: attacker in direction d, ally in direction (d+3)%6
+function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) {
+  if (!areEnemies(attackerToken.document, targetToken.document)) return false;
+  if (noDaisyChain && isGeometricallyFlanked(attackerToken)) return false;
+
+  const neighbors = hexNeighbors(targetToken);
+  const attackerOff = tokenOffset(attackerToken);
+
+  const attackerDir = neighbors.findIndex(n => offsetEq(n, attackerOff));
+  if (attackerDir === -1) return false;
+
+  const oppositeOff = neighbors[(attackerDir + 3) % 6];
+
+  return canvas.tokens.placeables.some(t => {
+    if (t === attackerToken || t === targetToken) return false;
+    if (!areAllies(t.document, attackerToken.document)) return false;
+    if (requireActive && isIncapacitated(t)) return false;
+    if (!offsetEq(tokenOffset(t), oppositeOff)) return false;
+    if (noDaisyChain && isGeometricallyFlanked(t)) return false;
+    return true;
+  });
+}
+
+// Square: multi-size zone-based opposite check
+function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain) {
   if (!areEnemies(attackerToken.document, targetToken.document)) return false;
   if (!isAdjacent(attackerToken, targetToken)) return false;
+  if (noDaisyChain && isGeometricallyFlanked(attackerToken)) return false;
 
   const zones = neighborZones(targetToken);
   const attackerZones = touchedZones(attackerToken, zones);
@@ -227,16 +374,63 @@ export function isFlanking(attackerToken, targetToken, { requireActive = false }
     if (requireActive && isIncapacitated(t)) return false;
 
     const allyZones = touchedZones(t, zones);
+    let hasOpposite = false;
     for (const az of attackerZones) {
-      if (allyZones.has(OPPOSITE[az])) return true;
+      if (allyZones.has(OPPOSITE[az])) { hasOpposite = true; break; }
     }
-    return false;
+    if (!hasOpposite) return false;
+    if (noDaisyChain && isGeometricallyFlanked(t)) return false;
+    return true;
   });
 }
 
 /* -------------------------------------------------- */
-/*  Surrounded (multi-size aware)                      */
+/*  Surrounded                                         */
 /* -------------------------------------------------- */
+
+export function isSurrounded(targetToken) {
+  if (!canvas?.ready) return false;
+
+  if (isHexGrid()) return isSurroundedHex(targetToken);
+  if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE) return false;
+  return isSurroundedSquare(targetToken);
+}
+
+// Hex: all 6 adjacent hexes blocked by enemy or wall
+function isSurroundedHex(targetToken) {
+  const neighbors = hexNeighbors(targetToken);
+  const center = tokenHexCenter(targetToken);
+
+  return neighbors.every(neighborOff => {
+    const hasEnemy = canvas.tokens.placeables.some(t => {
+      if (t === targetToken) return false;
+      if (t.document.disposition === targetToken.document.disposition) return false;
+      return offsetEq(tokenOffset(t), neighborOff);
+    });
+    if (hasEnemy) return true;
+
+    const neighborCenter = canvas.grid.getCenterPoint(neighborOff);
+    return isMovementBlocked(center, neighborCenter);
+  });
+}
+
+// Square: multi-size cardinal-side check
+function isSurroundedSquare(targetToken) {
+  const zones = neighborZones(targetToken);
+  const cardinals = ["N", "E", "S", "W"];
+
+  return cardinals.every((dir) => {
+    const side = zones[dir];
+    const needed = Math.ceil(side.length / 2);
+    let blocked = 0;
+
+    for (const { gx, gy } of side) {
+      if (squareBlocked(gx, gy, targetToken)) blocked++;
+      if (blocked >= needed) return true;
+    }
+    return false;
+  });
+}
 
 function squareHasEnemy(gx, gy, targetToken) {
   const tDoc = targetToken.document;
@@ -258,26 +452,6 @@ function squareBlocked(gx, gy, targetToken) {
   const dest = squareCenter(gx, gy);
 
   return isMovementBlocked(origin, dest);
-}
-
-export function isSurrounded(targetToken) {
-  if (!canvas?.ready) return false;
-  if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE) return false;
-
-  const zones = neighborZones(targetToken);
-  const cardinals = ["N", "E", "S", "W"];
-
-  return cardinals.every((dir) => {
-    const side = zones[dir];
-    const needed = Math.ceil(side.length / 2);
-    let blocked = 0;
-
-    for (const { gx, gy } of side) {
-      if (squareBlocked(gx, gy, targetToken)) blocked++;
-      if (blocked >= needed) return true;
-    }
-    return false;
-  });
 }
 
 /* -------------------------------------------------- */
