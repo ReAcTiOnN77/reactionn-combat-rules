@@ -326,7 +326,7 @@ function isGeometricallyFlanked(token) {
 /*  Flanking                                           */
 /* -------------------------------------------------- */
 
-export function isFlanking(attackerToken, targetToken, { requireActive = false, noDaisyChain = false } = {}) {
+export function isFlanking(attackerToken, targetToken, { requireActive = false, noDaisyChain = "off" } = {}) {
   if (!canvas?.ready) return false;
 
   if (isHexGrid()) return isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain);
@@ -337,7 +337,7 @@ export function isFlanking(attackerToken, targetToken, { requireActive = false, 
 // Hex: attacker in direction d, ally in direction (d+3)%6
 function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) {
   if (!areEnemies(attackerToken.document, targetToken.document)) return false;
-  if (noDaisyChain && isGeometricallyFlanked(attackerToken)) return false;
+  if (noDaisyChain === "both" && isGeometricallyFlanked(attackerToken)) return false;
 
   const neighbors = hexNeighbors(targetToken);
   const attackerOff = tokenOffset(attackerToken);
@@ -352,7 +352,7 @@ function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) 
     if (!areAllies(t.document, attackerToken.document)) return false;
     if (requireActive && isIncapacitated(t)) return false;
     if (!offsetEq(tokenOffset(t), oppositeOff)) return false;
-    if (noDaisyChain && isGeometricallyFlanked(t)) return false;
+    if (noDaisyChain !== "off" && isGeometricallyFlanked(t)) return false;
     return true;
   });
 }
@@ -361,7 +361,7 @@ function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) 
 function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain) {
   if (!areEnemies(attackerToken.document, targetToken.document)) return false;
   if (!isAdjacent(attackerToken, targetToken)) return false;
-  if (noDaisyChain && isGeometricallyFlanked(attackerToken)) return false;
+  if (noDaisyChain === "both" && isGeometricallyFlanked(attackerToken)) return false;
 
   const zones = neighborZones(targetToken);
   const attackerZones = touchedZones(attackerToken, zones);
@@ -379,7 +379,7 @@ function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChai
       if (allyZones.has(OPPOSITE[az])) { hasOpposite = true; break; }
     }
     if (!hasOpposite) return false;
-    if (noDaisyChain && isGeometricallyFlanked(t)) return false;
+    if (noDaisyChain !== "off" && isGeometricallyFlanked(t)) return false;
     return true;
   });
 }

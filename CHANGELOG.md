@@ -1,3 +1,7 @@
+## Version 1.1.2
+- Added Hex Grid Support
+- Added No Flanking Daisy Chains option (default off)
+
 ## Version 1.1.1
 - Fixed issue with Recovery prompt not firing for players, and only for the GM
 

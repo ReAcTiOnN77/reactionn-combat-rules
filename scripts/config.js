@@ -49,7 +49,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, "flankingNoDaisyChain", {
     name: "RCR.Settings.FlankingNoDaisyChain.Name",
-    scope: "world", config: false, type: Boolean, default: false,
+    scope: "world", config: false, type: String, default: "off",
   });
 
   /* ============================================== */

@@ -31,6 +31,14 @@ function disadvChoices() {
   };
 }
 
+function daisyChainChoices() {
+  return {
+    off: L("RCR.Settings.DaisyChain.Off"),
+    ally: L("RCR.Settings.DaisyChain.AllyOnly"),
+    both: L("RCR.Settings.DaisyChain.Both"),
+  };
+}
+
 /* -------------------------------------------------- */
 /*  Base settings app                                  */
 /* -------------------------------------------------- */
@@ -71,6 +79,7 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     context.advChoices = advChoices();
     context.disadvChoices = disadvChoices();
+    context.daisyChainChoices = daisyChainChoices();
 
     return context;
   }

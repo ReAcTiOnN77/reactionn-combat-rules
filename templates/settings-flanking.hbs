@@ -23,7 +23,9 @@
 
   <div class="form-group">
     <label>{{localize "RCR.Settings.FlankingNoDaisyChain.Name"}}</label>
-    <input type="checkbox" name="flankingNoDaisyChain" {{checked flankingNoDaisyChain}}>
+    <select name="flankingNoDaisyChain">
+      {{selectOptions daisyChainChoices selected=flankingNoDaisyChain}}
+    </select>
     <p class="hint">{{localize "RCR.Settings.FlankingNoDaisyChain.Hint"}}</p>
   </div>
 </fieldset>

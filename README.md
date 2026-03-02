@@ -24,6 +24,10 @@ Choose how Flanking should work at your table:
 
 Optional rule:  
 - **Flanking Requires Active Ally** — The ally must not be prone, incapacitated, stunned, petrified, paralyzed, unconscious or dead.
+- **No Flanking Daisy Chaining** 
+    - Disabled
+    - Ally Only — if Attackers ally is flanked then no flanking bonus or attacker
+    - Ally + Attacker — if Attacker or Ally are flanked no flanking bonus
 
 ---
 
