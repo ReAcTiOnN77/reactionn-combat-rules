@@ -1,6 +1,6 @@
 ## Version 1.1.3
-- Merged all settings HBS files, into one file
-- Updated elevation rules to now file on any target regardless of disposition
+- Merged all settings HBS files into one file
+- Updated elevation rules to now fire on any target regardless of disposition
 
 ## Version 1.1.2
 - Added Hex Grid Support
