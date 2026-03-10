@@ -1,3 +1,6 @@
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/7DkfrUV7ru)
+[![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/cw/ReAcTiOnN)
+
 # ReAcTiOnN's Combat Rules
 
 A lightweight **D&D 5e Foundry VTT module** that enhances tactical combat with automated optional rules such as **flanking**, **surrounded bonuses**, **high-ground modifiers**, and **condition-based advantage/disadvantage**.  
