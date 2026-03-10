@@ -39,6 +39,12 @@ function daisyChainChoices() {
   };
 }
 
+function esc(str) {
+  return String(str ?? "")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+
 /* -------------------------------------------------- */
 /*  Base settings app                                  */
 /* -------------------------------------------------- */
@@ -64,25 +70,20 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
   }, { inplace: false });
 
   static PARTS = {
-    config: { template: "" },
+    config: { template: `modules/${MODULE_ID}/templates/settings-app.hbs` },
     footer: { template: "templates/generic/form-footer.hbs" },
   };
 
   async _preparePartContext(partId, context, options) {
     context = await super._preparePartContext(partId, context, options);
     context.buttons ??= [{ type: "submit", icon: "fa-solid fa-save", label: "Save Changes" }];
-
-    if (partId === "footer") return context;
-
-    for (const key of this.constructor.SETTING_KEYS) {
-      context[key] = getSetting(key);
+    if (partId === "config") {
+      context.formHtml = this._buildFormHtml();
     }
-    context.advChoices = advChoices();
-    context.disadvChoices = disadvChoices();
-    context.daisyChainChoices = daisyChainChoices();
-
     return context;
   }
+
+  _buildFormHtml() { return ""; }
 
   static async _onSubmit(event, form, formData) {
     event.preventDefault();
@@ -93,10 +94,39 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
   }
+
+  /* ---- HTML builders ---- */
+
+  _i18nKey(settingKey) {
+    return settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
+  }
+
+  _checkbox(settingKey, value) {
+    const key = this._i18nKey(settingKey);
+    return `<div class="form-group">
+      <label>${L(`RCR.Settings.${key}.Name`)}</label>
+      <input type="checkbox" name="${esc(settingKey)}" ${value ? "checked" : ""}>
+      <p class="hint">${L(`RCR.Settings.${key}.Hint`)}</p>
+    </div>`;
+  }
+
+  _select(settingKey, choices, value) {
+    const key = this._i18nKey(settingKey);
+    const opts = Object.entries(choices).map(([k, lbl]) =>
+      `<option value="${esc(k)}" ${k === value ? "selected" : ""}>${esc(lbl)}</option>`
+    ).join("");
+    return `<div class="form-group">
+      <label>${L(`RCR.Settings.${key}.Name`)}</label>
+      <select name="${esc(settingKey)}">${opts}</select>
+      <p class="hint">${L(`RCR.Settings.${key}.Hint`)}</p>
+    </div>`;
+  }
+
+  _hr() { return "<hr>"; }
 }
 
 /* -------------------------------------------------- */
-/*  Per-rule settings apps                             */
+/*  Flanking                                           */
 /* -------------------------------------------------- */
 
 export class FlankingSettings extends RCRSettingsBase {
@@ -111,12 +141,18 @@ export class FlankingSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  static PARTS = {
-    config: { template: `modules/${MODULE_ID}/templates/settings-flanking.hbs` },
-    footer: { template: "templates/generic/form-footer.hbs" },
-  };
+  _buildFormHtml() {
+    return `<fieldset>
+      ${this._checkbox("enableFlanking", getSetting("enableFlanking"))}
+      ${this._select("flankingBehaviour", advChoices(), getSetting("flankingBehaviour"))}
+      ${this._checkbox("flankingRequiresActive", getSetting("flankingRequiresActive"))}
+      ${this._select("flankingNoDaisyChain", daisyChainChoices(), getSetting("flankingNoDaisyChain"))}
+    </fieldset>`;
+  }
 }
 
+/* -------------------------------------------------- */
+/*  Surrounded                                         */
 /* -------------------------------------------------- */
 
 export class SurroundedSettings extends RCRSettingsBase {
@@ -131,12 +167,16 @@ export class SurroundedSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  static PARTS = {
-    config: { template: `modules/${MODULE_ID}/templates/settings-surrounded.hbs` },
-    footer: { template: "templates/generic/form-footer.hbs" },
-  };
+  _buildFormHtml() {
+    return `<fieldset>
+      ${this._checkbox("enableSurrounded", getSetting("enableSurrounded"))}
+      ${this._select("surroundedBehaviour", advChoices(), getSetting("surroundedBehaviour"))}
+    </fieldset>`;
+  }
 }
 
+/* -------------------------------------------------- */
+/*  Elevation                                          */
 /* -------------------------------------------------- */
 
 export class ElevationSettings extends RCRSettingsBase {
@@ -151,12 +191,19 @@ export class ElevationSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  static PARTS = {
-    config: { template: `modules/${MODULE_ID}/templates/settings-elevation.hbs` },
-    footer: { template: "templates/generic/form-footer.hbs" },
-  };
+  _buildFormHtml() {
+    return `<fieldset>
+      ${this._checkbox("enableHighGround", getSetting("enableHighGround"))}
+      ${this._select("highGroundBehaviour", advChoices(), getSetting("highGroundBehaviour"))}
+      ${this._hr()}
+      ${this._checkbox("enableLowGround", getSetting("enableLowGround"))}
+      ${this._select("lowGroundBehaviour", disadvChoices(), getSetting("lowGroundBehaviour"))}
+    </fieldset>`;
+  }
 }
 
+/* -------------------------------------------------- */
+/*  Conditions                                         */
 /* -------------------------------------------------- */
 
 export class ConditionsSettings extends RCRSettingsBase {
@@ -171,12 +218,15 @@ export class ConditionsSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  static PARTS = {
-    config: { template: `modules/${MODULE_ID}/templates/settings-conditions.hbs` },
-    footer: { template: "templates/generic/form-footer.hbs" },
-  };
+  _buildFormHtml() {
+    return `<fieldset>
+      ${this._checkbox("enableConditionAdvantage", getSetting("enableConditionAdvantage"))}
+    </fieldset>`;
+  }
 }
 
+/* -------------------------------------------------- */
+/*  Ammunition                                         */
 /* -------------------------------------------------- */
 
 export class AmmoSettings extends RCRSettingsBase {
@@ -191,8 +241,10 @@ export class AmmoSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  static PARTS = {
-    config: { template: `modules/${MODULE_ID}/templates/settings-ammo.hbs` },
-    footer: { template: "templates/generic/form-footer.hbs" },
-  };
+  _buildFormHtml() {
+    return `<fieldset>
+      ${this._checkbox("enableAmmoTracking", getSetting("enableAmmoTracking"))}
+      ${this._checkbox("recoverMagicalAmmo", getSetting("recoverMagicalAmmo"))}
+    </fieldset>`;
+  }
 }

@@ -493,7 +493,5 @@ export function resolveTokens(config) {
   if (targets.length !== 1) return null;
   const targetToken = targets[0];
 
-  if (!areEnemies(attackerToken.document, targetToken.document)) return null;
-
   return { attackerToken, targetToken, actionType };
 }
