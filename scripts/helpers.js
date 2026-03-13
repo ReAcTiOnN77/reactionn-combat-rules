@@ -1,3 +1,5 @@
+import { MODULE_ID } from "./config.js";
+
 const L = (key) => game.i18n.localize(key);
 const LF = (key, data) => game.i18n.format(key, data);
 
@@ -326,17 +328,18 @@ function isGeometricallyFlanked(token) {
 /*  Flanking                                           */
 /* -------------------------------------------------- */
 
-export function isFlanking(attackerToken, targetToken, { requireActive = false, noDaisyChain = "off" } = {}) {
+export function isFlanking(attackerToken, targetToken, { requireActive = false, noDaisyChain = "off", ignoreFlags = false } = {}) {
   if (!canvas?.ready) return false;
 
-  if (isHexGrid()) return isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain);
+  if (isHexGrid()) return isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain, ignoreFlags);
   if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE) return false;
-  return isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain);
+  return isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain, ignoreFlags);
 }
 
 // Hex: attacker in direction d, ally in direction (d+3)%6
-function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) {
+function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain, ignoreFlags) {
   if (!areEnemies(attackerToken.document, targetToken.document)) return false;
+  if (!ignoreFlags && targetToken.actor?.getFlag(MODULE_ID, "flankingImmune")) return false;
   if (noDaisyChain === "both" && isGeometricallyFlanked(attackerToken)) return false;
 
   const neighbors = hexNeighbors(targetToken);
@@ -350,6 +353,7 @@ function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) 
   return canvas.tokens.placeables.some(t => {
     if (t === attackerToken || t === targetToken) return false;
     if (!areAllies(t.document, attackerToken.document)) return false;
+    if (!ignoreFlags && t.actor?.getFlag(MODULE_ID, "cannotFlank")) return false;
     if (requireActive && isIncapacitated(t)) return false;
     if (!offsetEq(tokenOffset(t), oppositeOff)) return false;
     if (noDaisyChain !== "off" && isGeometricallyFlanked(t)) return false;
@@ -358,8 +362,9 @@ function isFlankingHex(attackerToken, targetToken, requireActive, noDaisyChain) 
 }
 
 // Square: multi-size zone-based opposite check
-function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain) {
+function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChain, ignoreFlags) {
   if (!areEnemies(attackerToken.document, targetToken.document)) return false;
+  if (!ignoreFlags && targetToken.actor?.getFlag(MODULE_ID, "flankingImmune")) return false;
   if (!isAdjacent(attackerToken, targetToken)) return false;
   if (noDaisyChain === "both" && isGeometricallyFlanked(attackerToken)) return false;
 
@@ -370,6 +375,7 @@ function isFlankingSquare(attackerToken, targetToken, requireActive, noDaisyChai
   return canvas.tokens.placeables.some((t) => {
     if (t === attackerToken || t === targetToken) return false;
     if (!areAllies(t.document, attackerToken.document)) return false;
+    if (!ignoreFlags && t.actor?.getFlag(MODULE_ID, "cannotFlank")) return false;
     if (!isAdjacent(t, targetToken)) return false;
     if (requireActive && isIncapacitated(t)) return false;
 
