@@ -41,6 +41,19 @@
       "path": "lang/en.json"
     }
   ],
+  "packs": [
+    {
+      "name": "macros",
+      "label": "Combat Rules Macros",
+      "path": "packs/macros",
+      "type": "Macro",
+      "ownership": {
+        "GAMEMASTER": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    }
+  ],
   "url": "#{URL}#",
   "manifest": "#{MANIFEST}#",
   "download": "#{DOWNLOAD}#",
