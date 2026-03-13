@@ -39,12 +39,6 @@ function daisyChainChoices() {
   };
 }
 
-function esc(str) {
-  return String(str ?? "")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;")
-    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
-}
-
 /* -------------------------------------------------- */
 /*  Base settings app                                  */
 /* -------------------------------------------------- */
@@ -78,12 +72,13 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
     context = await super._preparePartContext(partId, context, options);
     context.buttons ??= [{ type: "submit", icon: "fa-solid fa-save", label: "Save Changes" }];
     if (partId === "config") {
-      context.formHtml = this._buildFormHtml();
+      context.settings = this._buildSettings();
     }
     return context;
   }
 
-  _buildFormHtml() { return ""; }
+  /** Subclasses override this to return an array of setting descriptors. */
+  _buildSettings() { return []; }
 
   static async _onSubmit(event, form, formData) {
     event.preventDefault();
@@ -95,34 +90,34 @@ class RCRSettingsBase extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
-  /* ---- HTML builders ---- */
+  /* ---- Setting descriptor helpers ---- */
 
-  _i18nKey(settingKey) {
-    return settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
+  _checkbox(settingKey) {
+    const i18nKey = settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
+    return {
+      key: settingKey,
+      name: L(`RCR.Settings.${i18nKey}.Name`),
+      hint: L(`RCR.Settings.${i18nKey}.Hint`),
+      value: getSetting(settingKey),
+      isCheckbox: true,
+    };
   }
 
-  _checkbox(settingKey, value) {
-    const key = this._i18nKey(settingKey);
-    return `<div class="form-group">
-      <label>${L(`RCR.Settings.${key}.Name`)}</label>
-      <input type="checkbox" name="${esc(settingKey)}" ${value ? "checked" : ""}>
-      <p class="hint">${L(`RCR.Settings.${key}.Hint`)}</p>
-    </div>`;
+  _select(settingKey, choices) {
+    const i18nKey = settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
+    return {
+      key: settingKey,
+      name: L(`RCR.Settings.${i18nKey}.Name`),
+      hint: L(`RCR.Settings.${i18nKey}.Hint`),
+      value: getSetting(settingKey),
+      choices,
+      isSelect: true,
+    };
   }
 
-  _select(settingKey, choices, value) {
-    const key = this._i18nKey(settingKey);
-    const opts = Object.entries(choices).map(([k, lbl]) =>
-      `<option value="${esc(k)}" ${k === value ? "selected" : ""}>${esc(lbl)}</option>`
-    ).join("");
-    return `<div class="form-group">
-      <label>${L(`RCR.Settings.${key}.Name`)}</label>
-      <select name="${esc(settingKey)}">${opts}</select>
-      <p class="hint">${L(`RCR.Settings.${key}.Hint`)}</p>
-    </div>`;
+  _separator() {
+    return { isSeparator: true };
   }
-
-  _hr() { return "<hr>"; }
 }
 
 /* -------------------------------------------------- */
@@ -141,13 +136,13 @@ export class FlankingSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  _buildFormHtml() {
-    return `<fieldset>
-      ${this._checkbox("enableFlanking", getSetting("enableFlanking"))}
-      ${this._select("flankingBehaviour", advChoices(), getSetting("flankingBehaviour"))}
-      ${this._checkbox("flankingRequiresActive", getSetting("flankingRequiresActive"))}
-      ${this._select("flankingNoDaisyChain", daisyChainChoices(), getSetting("flankingNoDaisyChain"))}
-    </fieldset>`;
+  _buildSettings() {
+    return [
+      this._checkbox("enableFlanking"),
+      this._select("flankingBehaviour", advChoices()),
+      this._checkbox("flankingRequiresActive"),
+      this._select("flankingNoDaisyChain", daisyChainChoices()),
+    ];
   }
 }
 
@@ -167,11 +162,11 @@ export class SurroundedSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  _buildFormHtml() {
-    return `<fieldset>
-      ${this._checkbox("enableSurrounded", getSetting("enableSurrounded"))}
-      ${this._select("surroundedBehaviour", advChoices(), getSetting("surroundedBehaviour"))}
-    </fieldset>`;
+  _buildSettings() {
+    return [
+      this._checkbox("enableSurrounded"),
+      this._select("surroundedBehaviour", advChoices()),
+    ];
   }
 }
 
@@ -191,14 +186,14 @@ export class ElevationSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  _buildFormHtml() {
-    return `<fieldset>
-      ${this._checkbox("enableHighGround", getSetting("enableHighGround"))}
-      ${this._select("highGroundBehaviour", advChoices(), getSetting("highGroundBehaviour"))}
-      ${this._hr()}
-      ${this._checkbox("enableLowGround", getSetting("enableLowGround"))}
-      ${this._select("lowGroundBehaviour", disadvChoices(), getSetting("lowGroundBehaviour"))}
-    </fieldset>`;
+  _buildSettings() {
+    return [
+      this._checkbox("enableHighGround"),
+      this._select("highGroundBehaviour", advChoices()),
+      this._separator(),
+      this._checkbox("enableLowGround"),
+      this._select("lowGroundBehaviour", disadvChoices()),
+    ];
   }
 }
 
@@ -218,10 +213,10 @@ export class ConditionsSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  _buildFormHtml() {
-    return `<fieldset>
-      ${this._checkbox("enableConditionAdvantage", getSetting("enableConditionAdvantage"))}
-    </fieldset>`;
+  _buildSettings() {
+    return [
+      this._checkbox("enableConditionAdvantage"),
+    ];
   }
 }
 
@@ -241,10 +236,10 @@ export class AmmoSettings extends RCRSettingsBase {
     },
   }, { inplace: false });
 
-  _buildFormHtml() {
-    return `<fieldset>
-      ${this._checkbox("enableAmmoTracking", getSetting("enableAmmoTracking"))}
-      ${this._checkbox("recoverMagicalAmmo", getSetting("recoverMagicalAmmo"))}
-    </fieldset>`;
+  _buildSettings() {
+    return [
+      this._checkbox("enableAmmoTracking"),
+      this._checkbox("recoverMagicalAmmo"),
+    ];
   }
 }
