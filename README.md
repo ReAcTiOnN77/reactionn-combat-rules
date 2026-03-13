@@ -1,21 +1,13 @@
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/7DkfrUV7ru)
 [![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/cw/ReAcTiOnN)
-
 # ReAcTiOnN's Combat Rules
-
 A lightweight **D&D 5e Foundry VTT module** that enhances tactical combat with automated optional rules such as **flanking**, **surrounded bonuses**, **high-ground modifiers**, and **condition-based advantage/disadvantage**.  
-All features are fully toggleable through world settings so GMs can fine-tune combat to their table’s preferences.
-
-
+All features are fully toggleable through world settings so GMs can fine-tune combat to their table's preferences.
 <img width="1228" height="478" alt="175452585_image" src="https://github.com/user-attachments/assets/bee07193-5886-4c83-b31c-088ed7b095f6" />
-
 ---
-
 ## Features
-
 ### **Flanking**
 When a melee attacker and an ally are positioned on opposite sides of a target, gain **flanking** bonus based on behaviour setting on melee attacks..
-
 #### **Flanking Behaviour Options**
 Choose how Flanking should work at your table:
 - **Advantage**
@@ -24,7 +16,6 @@ Choose how Flanking should work at your table:
 - **+3 to hit**
 - **+4 to hit**
 - **+5 to hit**
-
 Optional rule:  
 - **Flanking Requires Active Ally** — The ally must not be prone, incapacitated, stunned, petrified, paralyzed, unconscious or dead.
 - **No Flanking Daisy Chaining** 
@@ -32,11 +23,16 @@ Optional rule:
     - Ally Only — if Attackers ally is flanked then no flanking bonus or attacker
     - Ally + Attacker — if Attacker or Ally are flanked no flanking bonus
 
----
+#### **Flanking Immunity**
+GMs can mark individual creatures with flanking flags using simple hotbar macros:
+- **Flanking Immune** — The creature cannot be flanked (e.g. Beholders, creatures with Blindsight, plants)
+- **Cannot Flank** — The creature cannot provide flanking for allies (e.g. summons, minions)
 
+Both flags are applied as Active Effects visible in the creature's Effects tab. When flanking is blocked by a flag, the attack roll dialog displays a **"No Flanking"** note explaining why the bonus was not applied.
+
+---
 ### **Surrounded**
 When all four cardinal spaces around a target are at least 50% blocked each by enemies or walls, attackers gain **surrounded** bonus based on behaviour setting on melee attacks.
-
 #### **Surrounded Behaviour Options**
 Choose how Surrounded should work at your table:
 - **Advantage** *(default)*
@@ -45,12 +41,9 @@ Choose how Surrounded should work at your table:
 - **+3 to hit**
 - **+4 to hit**
 - **+5 to hit**
-
 ---
-
 ### **Elevation**
-Ranged weapon and spell attacks gain **Elevation** bonus/penalty based on behaviour setting, when the attacker is at least **10 feet above/below** the target’s elevation.
-
+Ranged weapon and spell attacks gain **Elevation** bonus/penalty based on behaviour setting, when the attacker is at least **10 feet above/below** the target's elevation.
 #### **High Ground Behaviour Options**
 Choose how High Ground should work at your table:
 - **Advantage** 
@@ -60,7 +53,6 @@ Choose how High Ground should work at your table:
 - **+4 to hit**
 - **+5 to hit**
 ---
-
 #### **Low Ground Behaviour Options**
 Choose how Low Ground should work at your table:
 - **Disadvantage** 
@@ -70,10 +62,8 @@ Choose how Low Ground should work at your table:
 - **-4 to hit**
 - **-5 to hit**
 ---
-
 ### **Condition-Based Advantage/Disadvantage**
 Automatically applies advantage or disadvantage based on common status conditions, including:
-
 - blinded  
 - restrained  
 - prone  
@@ -82,42 +72,26 @@ Automatically applies advantage or disadvantage based on common status condition
 - paralyzed  
 - stunned  
 - unconscious  
-
 ---
-
 ### **Ammo Tracking**
 Tracks how much ammunition is used during combat then prompts the player to recover half used
-
 - Option to recover magical ammo
-
-
 ---
-
 ## Installation
-
 1. Open Foundry VTT  
 2. Go to **Add-on Modules → Install Module**  
 3. Enter the manifest URL or search for the module in the package browser  
 4. Enable it in your world  
 5. Configure options in **Module Settings**
-
 ---
-
 ## Compatibility
-
 - System: **dnd5e**  
 - Foundry VTT: Compatible with the current stable builds  
 - Works alongside most automation modules (report conflicts if discovered)
-
 ---
-
 ## License
-
 Released under the [MIT License](./LICENSE).
-
 ---
-
 ## Issues & Support
-
 Report bugs or request features here:  
 **https://github.com/ReAcTiOnN77/reactionn-combat-rules/issues**
