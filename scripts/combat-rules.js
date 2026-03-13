@@ -81,6 +81,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
 
     let surrounded = false;
     let flanking = false;
+    let flankingBlocked = null;
     let highGround = false;
     let lowGround = false;
 
@@ -92,6 +93,22 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
           requireActive: getSetting("flankingRequiresActive"),
           noDaisyChain: getSetting("flankingNoDaisyChain"),
         });
+
+      // Detect why flanking was blocked by flags (for roll notes)
+      if (!flanking && !surrounded && getSetting("enableFlanking")) {
+        const opts = {
+          requireActive: getSetting("flankingRequiresActive"),
+          noDaisyChain: getSetting("flankingNoDaisyChain"),
+          ignoreFlags: true,
+        };
+        if (isFlanking(attackerToken, targetToken, opts)) {
+          if (targetToken.actor?.getFlag(MODULE_ID, "flankingImmune")) {
+            flankingBlocked = "immune";
+          } else {
+            flankingBlocked = "cannotFlank";
+          }
+        }
+      }
     }
 
     if (isRanged) {
@@ -102,7 +119,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
         && hasLowGround(attackerToken, targetToken);
     }
 
-    if (!surrounded && !flanking && !highGround && !lowGround) {
+    if (!surrounded && !flanking && !flankingBlocked && !highGround && !lowGround) {
       if (!getSetting("enableConditionAdvantage")) return true;
     }
 
@@ -131,7 +148,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
       }
     }
 
-    pendingStatus = { surrounded, flanking, highGround, lowGround, condAdvantages, condDisadvantages };
+    pendingStatus = { surrounded, flanking, flankingBlocked, highGround, lowGround, condAdvantages, condDisadvantages };
 
     return true;
   } catch (e) {
@@ -153,8 +170,8 @@ function injectNote(app, element) {
     if (!el) return;
     if (el.querySelector(`.${MODULE_ID}-note`)) return;
 
-    const { surrounded, flanking, highGround, lowGround, condAdvantages, condDisadvantages } = pendingStatus;
-    if (!surrounded && !flanking && !highGround && !lowGround
+    const { surrounded, flanking, flankingBlocked, highGround, lowGround, condAdvantages, condDisadvantages } = pendingStatus;
+    if (!surrounded && !flanking && !flankingBlocked && !highGround && !lowGround
         && !condAdvantages?.length && !condDisadvantages?.length) return;
 
     const entries = [];
@@ -165,6 +182,18 @@ function injectNote(app, element) {
     } else if (flanking) {
       entries.push(buildNote("fa-solid fa-people-arrows", "RCR.Note.Flanking.Label",
         "RCR.Note.Flanking.DescAdv", "RCR.Note.Flanking.DescMod", getSetting("flankingBehaviour")));
+    } else if (flankingBlocked === "immune") {
+      entries.push({
+        icon: "fa-solid fa-shield",
+        label: L("RCR.Note.NoFlanking.Label"),
+        desc: L("RCR.Note.FlankingImmune"),
+      });
+    } else if (flankingBlocked === "cannotFlank") {
+      entries.push({
+        icon: "fa-solid fa-ban",
+        label: L("RCR.Note.NoFlanking.Label"),
+        desc: L("RCR.Note.CannotFlank"),
+      });
     }
 
     if (highGround) {
