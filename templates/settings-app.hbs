@@ -1,1 +1,31 @@
-{{{formHtml}}}
+<section class="rcr-settings-page">
+
+{{#if description}}
+  <p class="hint" style="margin-bottom: 0.5rem;">{{{description}}}</p>
+{{/if}}
+
+{{#each settings}}
+  {{#if this.isSeparator}}
+    <hr>
+  {{else}}
+    <div class="form-group">
+      <label>{{this.name}}</label>
+      <div class="form-fields">
+
+        {{#if this.isCheckbox}}
+          <input type="checkbox" name="{{this.key}}" {{checked this.value}}>
+        {{else if this.isSelect}}
+          <select name="{{this.key}}">
+            {{selectOptions this.choices selected=this.value}}
+          </select>
+        {{else}}
+          <input type="text" name="{{this.key}}" value="{{this.value}}">
+        {{/if}}
+
+      </div>
+      {{#if this.hint}}<p class="hint">{{{this.hint}}}</p>{{/if}}
+    </div>
+  {{/if}}
+{{/each}}
+
+</section>
