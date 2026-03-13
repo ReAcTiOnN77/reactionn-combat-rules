@@ -76,6 +76,10 @@
   "RCR.Note.Flanking.DescAdv": "An ally is on the opposite side — Attack has Advantage.",
   "RCR.Note.Flanking.DescMod": "An ally is on the opposite side — +{value} Bonus to the Attack Roll.",
 
+  "RCR.Note.FlankingImmune": "Target is immune to flanking — no bonus applied.",
+  "RCR.Note.NoFlanking.Label": "No Flanking",
+  "RCR.Note.CannotFlank": "Flanking ally cannot provide flanking — no bonus applied.",
+
   "RCR.Note.Surrounded.Label": "Surrounded",
   "RCR.Note.Surrounded.DescAdv": "All cardinal sides are blocked — Attack has Advantage.",
   "RCR.Note.Surrounded.DescMod": "All cardinal sides are blocked — +{value} Bonus to the Attack Roll.",
