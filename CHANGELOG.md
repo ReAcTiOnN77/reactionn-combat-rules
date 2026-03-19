@@ -1,4 +1,4 @@
-##Version 1.2.1
+## Version 1.2.1
 - Fixed compatibility with Automated Conditions 5e
 - Condition advantage/disadvantage now defers to external modules when detected
 
