@@ -1,3 +1,7 @@
+##Version 1.2.1
+- Fixed compatibility with Automated Conditions 5e
+- Condition advantage/disadvantage now defers to external modules when detected
+
 ## Version 1.2.0
 - Refactored settings UI to use a single data-driven Handlebars template
 - Added Flanking Immunity flags - creatures can be marked immune to flanking or unable to provide flanking
