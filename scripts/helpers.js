@@ -105,19 +105,24 @@ export function areAllies(aDoc, bDoc) {
 /*  Wall collision                                     */
 /* -------------------------------------------------- */
 
-// Try polygon backend first, fall back to legacy walls layer
-export function isMovementBlocked(origin, destination) {
+// Try polygon backend first, fall back to legacy walls layer.
+// On v14 with Scene Levels, passing an `elevation` lets walls with limited
+// elevation ranges block (or fail to block) at the right altitude.
+export function isMovementBlocked(origin, destination, elevation = null) {
+  const o = elevation != null ? { ...origin, elevation } : origin;
+  const d = elevation != null ? { ...destination, elevation } : destination;
+
   try {
     const backend = CONFIG.Canvas?.polygonBackends?.move;
     if (backend?.testCollision) {
-      return backend.testCollision(origin, destination, { type: "move", mode: "any" });
+      return backend.testCollision(o, d, { type: "move", mode: "any" });
     }
   } catch {}
 
   try {
     const walls = canvas.walls;
     if (walls && typeof walls.checkCollision === "function") {
-      const ray = new foundry.canvas.geometry.Ray(origin, destination);
+      const ray = new foundry.canvas.geometry.Ray(o, d);
       return walls.checkCollision(ray, { type: "move", mode: "any" });
     }
   } catch {}
@@ -129,7 +134,30 @@ export function isMovementBlocked(origin, destination) {
 /*  Adjacency                                          */
 /* -------------------------------------------------- */
 
+// Two tokens are vertically separated enough that they can't be adjacent.
+// Honors v14 token depth (tall creatures): an ogre with depth 10 at elev 0
+// still reaches an enemy at elev 5. Falls back to bare elevation on v13.
+function verticallySeparated(tokenA, tokenB) {
+  const elevA  = tokenA.document.elevation ?? 0;
+  const elevB  = tokenB.document.elevation ?? 0;
+  const depthA = tokenA.document.depth ?? 0;
+  const depthB = tokenB.document.depth ?? 0;
+
+  // On v14 with explicit Scene Levels, different levels = not adjacent
+  const levA = tokenA.document.level;
+  const levB = tokenB.document.level;
+  if (levA && levB && levA !== levB) return true;
+
+  const topA = elevA + depthA;
+  const topB = elevB + depthB;
+  const gap  = Math.max(0, Math.max(elevA, elevB) - Math.min(topA, topB));
+  const gridDistance = canvas.scene?.grid?.distance ?? 5;
+  return gap > gridDistance;
+}
+
 export function isAdjacent(tokenA, tokenB) {
+  if (verticallySeparated(tokenA, tokenB)) return false;
+
   if (isHexGrid()) {
     const neighbors = hexNeighbors(tokenB);
     const offA = tokenOffset(tokenA);
@@ -221,7 +249,7 @@ export function getConditionModifiers(attackerToken, targetToken, actionType) {
   const aStat = attackerToken.actor?.statuses ?? new Set();
   const tStat = targetToken.actor?.statuses ?? new Set();
 
-  const isMelee = ["mwak", "msak", "natural"].includes(actionType);
+  const isMelee = ["mwak", "msak"].includes(actionType);
   const isRanged = ["rwak", "rsak"].includes(actionType);
 
   // Attacker
@@ -406,6 +434,7 @@ export function isSurrounded(targetToken) {
 function isSurroundedHex(targetToken) {
   const neighbors = hexNeighbors(targetToken);
   const center = tokenHexCenter(targetToken);
+  const elevation = targetToken.document.elevation ?? 0;
 
   return neighbors.every(neighborOff => {
     const hasEnemy = canvas.tokens.placeables.some(t => {
@@ -416,7 +445,7 @@ function isSurroundedHex(targetToken) {
     if (hasEnemy) return true;
 
     const neighborCenter = canvas.grid.getCenterPoint(neighborOff);
-    return isMovementBlocked(center, neighborCenter);
+    return isMovementBlocked(center, neighborCenter, elevation);
   });
 }
 
@@ -456,8 +485,9 @@ function squareBlocked(gx, gy, targetToken) {
   const nearestY = Math.max(r.y, Math.min(r.y + r.h - 1, gy));
   const origin = squareCenter(nearestX, nearestY);
   const dest = squareCenter(gx, gy);
+  const elevation = targetToken.document.elevation ?? 0;
 
-  return isMovementBlocked(origin, dest);
+  return isMovementBlocked(origin, dest, elevation);
 }
 
 /* -------------------------------------------------- */
@@ -492,7 +522,7 @@ export function resolveTokens(config) {
 
   const attackerToken =
     canvas.tokens.controlled.find((t) => t.actor === actor) ??
-    actor.getActiveTokens(true, true)[0];
+    actor.getActiveTokens(false, false)[0];
   if (!attackerToken) return null;
 
   const targets = [...game.user.targets];

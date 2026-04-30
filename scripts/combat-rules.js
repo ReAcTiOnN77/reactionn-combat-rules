@@ -125,7 +125,7 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog, message) => {
     if (!tokens) return true;
 
     const { attackerToken, targetToken, actionType } = tokens;
-    const isMelee = ["mwak", "msak", "natural"].includes(actionType);
+    const isMelee = ["mwak", "msak"].includes(actionType);
     const isRanged = ["rwak", "rsak"].includes(actionType);
 
     let surrounded = false;
@@ -300,7 +300,6 @@ for (const hookName of [
   "renderRollConfigurationDialog",
   "renderD20RollConfigurationDialog",
   "renderAttackRollConfigurationDialog",
-  "renderApplication",
   "renderApplicationV2"
 ]) {
   Hooks.on(hookName, injectNote);
