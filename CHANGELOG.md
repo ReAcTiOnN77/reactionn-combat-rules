@@ -1,3 +1,10 @@
+## Version 1.3.0
+- Verified compatible with Foundry VTT v14 and D&D 5e v5.3.2
+  - Foundry v13 remains fully supported
+- Flanking and surrounded now correctly account for vertical separation on multi-level scenes
+- Wall collision checks for the surrounded rule now respect wall elevation ranges
+- Fixed attack rolls occasionally failing to detect the attacker's token when no token was selected
+
 ## Version 1.2.1
 - Fixed compatibility with Automated Conditions 5e
 - Condition advantage/disadvantage now defers to external modules when detected
